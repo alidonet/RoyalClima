@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="512" viewBox="80 -16 640 512" role="img" aria-labelledby="title">
+  <title id="title">Температуры и воздушные потоки</title>
+  <defs>
+    <linearGradient id="supply"><stop stop-color="#25b9df"/><stop offset="1" stop-color="#ef8450"/></linearGradient>
+    <linearGradient id="exhaust"><stop stop-color="#639ed0"/><stop offset="1" stop-color="#ce6998"/></linearGradient>
+    <linearGradient id="case" x2="0" y2="1"><stop stop-color="#f8fbfe"/><stop offset="1" stop-color="#dce6f0"/></linearGradient>
+    <linearGradient id="rim" x2="0" y2="1"><stop stop-color="#b0c1d1"/><stop offset="1" stop-color="#8da2b8"/></linearGradient>
+    <linearGradient id="cover" x2="0" y2="1"><stop stop-color="#fff" stop-opacity=".24"/><stop offset="1" stop-color="#fff" stop-opacity=".04"/></linearGradient>
+    <linearGradient id="duct" x2="0" y2="1"><stop stop-color="#fff" stop-opacity=".65"/><stop offset=".5" stop-color="#d9e3ed" stop-opacity=".25"/><stop offset="1" stop-color="#99acc0" stop-opacity=".55"/></linearGradient>
+    <mask id="exhaust-gap" maskUnits="userSpaceOnUse" x="265" y="115" width="270" height="190">
+      <rect x="265" y="115" width="270" height="190" fill="#fff"/>
+      <path d="M265 170H305C370 170 430 260 495 260H535" fill="none" stroke="#000" stroke-width="32"/>
+    </mask>
+  </defs>
+  <rect x="80" y="-16" width="640" height="512" rx="22" fill="#f8fafc"/>
+  <g font-family="Arial, sans-serif">
+    <g font-size="20" fill="#34465b" text-anchor="middle">
+      <text x="220" y="34">Уличный воздух · OA</text><text x="595" y="34">Возврат · RA</text>
+      <text x="220" y="366">Выброс воздуха · FR</text><text x="595" y="366">Приток · SA</text>
+    </g>
+    <!-- Плоский корпус с полупрозрачной крышкой. -->
+    <g transform="translate(0 -15)">
+    <rect x="265" y="115" width="270" height="190" rx="7" fill="url(#case)"/>
+    <!-- Условная компоновка камер и пластинчатого теплообменника, не монтажный чертёж. -->
+    <g id="internals" opacity=".3" stroke="#8da0b3" stroke-width="1" stroke-linejoin="round">
+      <rect x="270" y="120" width="260" height="180" rx="5" fill="#d3dde7" fill-opacity=".24"/>
+      <!-- Замкнутые контуры перегородок показывают обе грани их толщины. -->
+      <g fill="#d3dde7" fill-opacity=".45">
+        <path d="M270 208H320L322 210 320 212H270Z"/>
+        <path d="M480 208H530V212H480L478 210Z"/>
+        <path d="M398 120H402V130L400 132 398 130Z"/>
+        <path d="M400 288 402 290V300H398V290Z"/>
+      </g>
+      <!-- Равные диагонали 156 × 156: квадрат, повёрнутый на 45 градусов. -->
+      <path d="M400 132 478 210 400 288 322 210Z" fill="#cedae7" fill-opacity=".45"/>
+      <path d="M400 136 474 210 400 284 326 210Z" fill="none"/>
+    </g>
+    <!-- Маска отделяет потоки в пересечении, сохраняя градиент корпуса. -->
+    <path d="M535 170H495C430 170 370 260 305 260H265" fill="none" stroke="url(#exhaust)" stroke-width="22" opacity=".45" mask="url(#exhaust-gap)"/>
+    <path d="M265 170H305C370 170 430 260 495 260H535" fill="none" stroke="url(#supply)" stroke-width="22" opacity=".45"/>
+    <!-- Длина внешних потоков — половина прежней; патрубки рисуются поверх воздуха. -->
+    <path d="M148.5 159H265V181H148.5L156.5 170Z" fill="#25b9df"/>
+    <path d="M651.5 159H535V181H651.5L643.5 170Z" fill="#ce6998"/>
+    <path d="M265 249H166.5V244L148.5 260 166.5 276V271H265Z" fill="#639ed0"/>
+    <path d="M535 249H633.5V244L651.5 260 633.5 276V271H535Z" fill="#ef8450"/>
+    <rect x="265" y="115" width="270" height="190" rx="7" fill="url(#cover)"/>
+    <g fill="url(#duct)" stroke="#91a5ba" stroke-opacity=".65" stroke-width="1.5">
+      <rect x="253" y="151" width="12" height="38" rx="2"/><rect x="535" y="151" width="12" height="38" rx="2"/>
+      <rect x="253" y="241" width="12" height="38" rx="2"/><rect x="535" y="241" width="12" height="38" rx="2"/>
+    </g>
+    <!-- Замкнутый контур поверх потоков сохраняет одинаковую толщину на стыках. -->
+    <rect x="265" y="115" width="270" height="190" rx="7" fill="none" stroke="url(#rim)" stroke-width="1.25"/>
+    <rect x="267" y="117" width="266" height="186" rx="5" fill="none" stroke="#fff" stroke-opacity=".5"/>
+    </g>
+    <!-- Прочерки совпадают с центрами подписей в YAML. -->
+    <g text-anchor="middle" dominant-baseline="central" font-size="36" fill="#8798aa">
+      <text x="205" y="66">—</text><text x="595" y="66">—</text>
+      <text x="205" y="324">—</text><text x="595" y="324">—</text>
+    </g>
+    <g fill="#edf2f7" stroke="#dce4ed">
+      <rect x="155" y="430" width="210" height="38" rx="10"/>
+      <rect x="381" y="430" width="38" height="38" rx="10"/>
+      <rect x="435" y="430" width="210" height="38" rx="10"/>
+    </g>
+    <g font-size="20" fill="#34465b">
+      <text x="171" y="456">Вытяжка</text><text x="451" y="456">Приток</text>
+    </g>
+    <g text-anchor="middle" dominant-baseline="central" font-size="23" fill="#8798aa">
+      <text x="315" y="449">—</text><text x="595" y="449">—</text>
+    </g>
+    <!-- Неактивная кнопка при отсутствии подтверждённого состояния питания. -->
+    <path d="M395 442A9 9 0 1 0 405 442 M400 437V447" fill="none" stroke="#a2adbb" stroke-width="2" stroke-linecap="round"/>
+  </g>
+</svg>

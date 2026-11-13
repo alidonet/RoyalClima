@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120" role="img" aria-labelledby="title">
+  <title id="title">Нет связи с ПВУ</title>
+  <defs>
+    <linearGradient id="link-face" x2="0" y2="1"><stop stop-color="#91a4b7"/><stop offset="1" stop-color="#c8d4e0"/></linearGradient>
+    <path id="broken-link" d="M70 63L84 49A18 18 0 0 0 59 24L45 38M50 57L36 71A18 18 0 0 0 61 96L75 82M34 25 29 18M23 39 15 36M86 95 91 102M97 81 105 84"/>
+    <filter id="inset" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
+      <feComponentTransfer in="SourceAlpha"><feFuncA type="table" tableValues="1 0"/></feComponentTransfer>
+      <feGaussianBlur stdDeviation=".8"/>
+      <feOffset dx="1" dy="1"/>
+      <feComposite in2="SourceAlpha" operator="in" result="inner-edge"/>
+      <feFlood flood-color="#52687e" flood-opacity=".45"/>
+      <feComposite in2="inner-edge" operator="in"/>
+      <feMerge><feMergeNode in="SourceGraphic"/><feMergeNode/></feMerge>
+    </filter>
+  </defs>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".5">
+    <use href="#broken-link" transform="translate(.7 1)" stroke="#fff" stroke-width="10" opacity=".65"/>
+    <use href="#broken-link" stroke="url(#link-face)" stroke-width="8" filter="url(#inset)"/>
+  </g>
+</svg>

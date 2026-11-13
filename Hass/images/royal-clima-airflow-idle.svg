@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="512" viewBox="80 -16 640 512" role="img" aria-labelledby="title">
+  <title id="title">Температуры и воздушные потоки</title>
+  <defs>
+    <linearGradient id="case" x2="0" y2="1"><stop stop-color="#f8fbfe"/><stop offset="1" stop-color="#dce6f0"/></linearGradient>
+    <linearGradient id="rim" x2="0" y2="1"><stop stop-color="#b0c1d1"/><stop offset="1" stop-color="#8da2b8"/></linearGradient>
+    <linearGradient id="cover" x2="0" y2="1"><stop stop-color="#fff" stop-opacity=".24"/><stop offset="1" stop-color="#fff" stop-opacity=".04"/></linearGradient>
+    <linearGradient id="duct" x2="0" y2="1"><stop stop-color="#fff" stop-opacity=".65"/><stop offset=".5" stop-color="#d9e3ed" stop-opacity=".25"/><stop offset="1" stop-color="#99acc0" stop-opacity=".55"/></linearGradient>
+  </defs>
+  <rect x="80" y="-16" width="640" height="512" rx="22" fill="#f8fafc"/>
+  <g font-family="Arial, sans-serif">
+    <g font-size="20" fill="#34465b" text-anchor="middle">
+      <text x="220" y="34">Уличный воздух · OA</text><text x="595" y="34">Возврат · RA</text>
+      <text x="220" y="366">Выброс воздуха · FR</text><text x="595" y="366">Приток · SA</text>
+    </g>
+    <!-- Плоский корпус с полупрозрачной крышкой. -->
+    <g transform="translate(0 -15)">
+    <rect x="265" y="115" width="270" height="190" rx="7" fill="url(#case)"/>
+    <rect x="265" y="115" width="270" height="190" rx="7" fill="url(#cover)"/>
+    <g fill="url(#duct)" stroke="#91a5ba" stroke-opacity=".65" stroke-width="1.5">
+      <rect x="253" y="151" width="12" height="38" rx="2"/><rect x="535" y="151" width="12" height="38" rx="2"/>
+      <rect x="253" y="241" width="12" height="38" rx="2"/><rect x="535" y="241" width="12" height="38" rx="2"/>
+    </g>
+    <!-- Контур совпадает с вариантом схемы для включённой установки. -->
+    <rect x="265" y="115" width="270" height="190" rx="7" fill="none" stroke="url(#rim)" stroke-width="1.25"/>
+    <rect x="267" y="117" width="266" height="186" rx="5" fill="none" stroke="#fff" stroke-opacity=".5"/>
+    </g>
+    <!-- Прочерки совпадают с центрами подписей в YAML. -->
+    <g text-anchor="middle" dominant-baseline="central" font-size="36" fill="#8798aa">
+      <text x="205" y="66">—</text><text x="595" y="66">—</text>
+      <text x="205" y="324">—</text><text x="595" y="324">—</text>
+    </g>
+    <g fill="#edf2f7" stroke="#dce4ed">
+      <rect x="155" y="430" width="210" height="38" rx="10"/>
+      <rect x="381" y="430" width="38" height="38" rx="10"/>
+      <rect x="435" y="430" width="210" height="38" rx="10"/>
+    </g>
+    <g font-size="20" fill="#34465b">
+      <text x="171" y="456">Вытяжка</text><text x="451" y="456">Приток</text>
+    </g>
+    <g text-anchor="middle" dominant-baseline="central" font-size="23" fill="#8798aa">
+      <text x="315" y="449">—</text><text x="595" y="449">—</text>
+    </g>
+    <!-- Неактивная кнопка при отсутствии подтверждённого состояния питания. -->
+    <path d="M395 442A9 9 0 1 0 405 442 M400 437V447" fill="none" stroke="#a2adbb" stroke-width="2" stroke-linecap="round"/>
+  </g>
+</svg>

@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="420" height="530" viewBox="20 15 420 530">
+  <defs>
+    <linearGradient id="body" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop stop-color="#f5f7f8"/>
+      <stop offset="0.5" stop-color="#eaf0f3"/>
+      <stop offset="1" stop-color="#dce5ea"/>
+    </linearGradient>
+    <linearGradient id="screen" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop stop-color="#dce4d3"/>
+      <stop offset="0.18" stop-color="#eef0e9"/>
+      <stop offset="0.85" stop-color="#eef0e9"/>
+      <stop offset="1" stop-color="#dce5d4"/>
+    </linearGradient>
+    <linearGradient id="screen-top-shadow" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop stop-color="#354331" stop-opacity="0.2"/>
+      <stop offset="1" stop-color="#354331" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="screen-rim" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop stop-color="#c5cec1"/>
+      <stop offset="1" stop-color="#fafcf7"/>
+    </linearGradient>
+    <linearGradient id="screen-side-shadow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop stop-color="#354331" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#354331" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="button-well" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop stop-color="#d4dfe4"/>
+      <stop offset="1" stop-color="#eaf0f3"/>
+    </linearGradient>
+    <linearGradient id="button" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop stop-color="#fcfdfe"/>
+      <stop offset="0.45" stop-color="#f1f5f7"/>
+      <stop offset="1" stop-color="#e2ebef"/>
+    </linearGradient>
+    <linearGradient id="button-seam" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop stop-color="#a4b1b9" stop-opacity="0.65"/>
+      <stop offset="1" stop-color="#7e909b" stop-opacity="0.75"/>
+    </linearGradient>
+    <filter id="button-shadow" x="-10%" y="-15%" width="120%" height="140%">
+      <feDropShadow dx="0" dy="1" stdDeviation="0.7" flood-color="#61707b" flood-opacity="0.14"/>
+    </filter>
+    <filter id="button-well-inset" x="-10%" y="-15%" width="120%" height="130%">
+      <feComponentTransfer in="SourceAlpha" result="inverse-alpha"><feFuncA type="table" tableValues="1 0"/></feComponentTransfer>
+      <feGaussianBlur in="inverse-alpha" stdDeviation="1.2" result="blur"/>
+      <feOffset in="blur" dy="1.2" result="offset"/>
+      <feComposite in="offset" in2="SourceAlpha" operator="in" result="inner-mask"/>
+      <feFlood flood-color="#596b76" flood-opacity="0.24" result="shadow-color"/>
+      <feComposite in="shadow-color" in2="inner-mask" operator="in" result="inner-shadow"/>
+      <feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="inner-shadow"/></feMerge>
+    </filter>
+    <clipPath id="screen-clip"><rect x="52" y="75" width="356" height="330" rx="4"/></clipPath>
+  </defs>
+  <rect x="20" y="15" width="420" height="530" fill="url(#body)"/>
+  <rect x="49" y="72" width="362" height="336" rx="7" fill="url(#screen-rim)" stroke="#cbd2c8" stroke-width="0.6"/>
+  <rect x="52" y="75" width="356" height="330" rx="4" fill="url(#screen)" stroke="#b7c0b2" stroke-width="0.7"/>
+  <g clip-path="url(#screen-clip)">
+    <rect x="52" y="75" width="356" height="12" fill="url(#screen-top-shadow)"/>
+    <rect x="52" y="75" width="6" height="330" fill="url(#screen-side-shadow)"/>
+    <path d="M54 81H406V96Q270 100 54 124Z" fill="#ffffff" opacity="0.32"/>
+    <path d="M58 404H403Q407 404 407 400V82" fill="none" stroke="#ffffff" stroke-opacity="0.55" stroke-width="1"/>
+  </g>
+  <g fill="#42483b" font-family="sans-serif" font-size="13" text-anchor="middle">
+    <text x="142.6" y="103">УЛИЧНЫЙ ВОЗДУХ · OA</text>
+    <text x="317.4" y="103">ВЫБРОС ВОЗДУХА · FR</text>
+    <text x="142.6" y="195">ВОЗВРАТ · RA</text>
+    <text x="317.4" y="195">ПРИТОК · SA</text>
+    <text x="142.6" y="287">СКОРОСТЬ ПРИТОКА</text>
+    <text x="317.4" y="287">СКОРОСТЬ ВЫТЯЖКИ</text>
+  </g>
+  <path d="M52 167H408 M52 259H408 M52 351H408 M230 75V351" fill="none" stroke="#b5baae" stroke-width="0.7"/>
+  <!-- Эти прочерки видны, когда HA скрывает подписи неизвестных значений. -->
+  <g fill="#30372a" font-family="monospace" font-size="24" text-anchor="middle" dominant-baseline="central">
+    <text x="142.6" y="137">--</text><text x="317.4" y="137">--</text>
+    <text x="142.6" y="229">--</text><text x="317.4" y="229">--</text>
+    <text x="142.6" y="321">--</text><text x="317.4" y="321">--</text>
+  </g>
+  <g transform="translate(0 10)">
+  <g fill="url(#button-well)" stroke="#cbd6db" stroke-width="0.4" filter="url(#button-well-inset)">
+    <rect x="50" y="423" width="108" height="64" rx="12"/>
+    <rect x="176" y="423" width="108" height="64" rx="12"/>
+    <rect x="302" y="423" width="108" height="64" rx="12"/>
+  </g>
+  <g fill="url(#button)" stroke="url(#button-seam)" stroke-width="0.65" filter="url(#button-shadow)">
+    <rect x="52" y="425" width="104" height="60" rx="10"/>
+    <rect x="178" y="425" width="104" height="60" rx="10"/>
+    <rect x="304" y="425" width="104" height="60" rx="10"/>
+  </g>
+  <g fill="#505050" font-family="sans-serif" font-size="11.5" font-weight="600" text-anchor="middle">
+    <text x="104" y="475">ПИТАНИЕ</text><text x="230" y="475">ПРИТОК</text><text x="356" y="475">ВЫТЯЖКА</text>
+  </g>
+  </g>
+</svg>

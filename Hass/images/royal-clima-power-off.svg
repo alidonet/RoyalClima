@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120" role="img" aria-labelledby="title">
+  <title id="title">ПВУ выключена</title>
+  <defs>
+    <linearGradient id="off-face" x2="0" y2="1">
+      <stop stop-color="#91a4b7"/>
+      <stop offset="1" stop-color="#c8d4e0"/>
+    </linearGradient>
+    <path id="power" d="M34 32A38 38 0 1 0 86 32M60 16V58"/>
+    <filter id="inset" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
+      <feComponentTransfer in="SourceAlpha"><feFuncA type="table" tableValues="1 0"/></feComponentTransfer>
+      <feGaussianBlur stdDeviation=".8"/>
+      <feOffset dx="1" dy="1"/>
+      <feComposite in2="SourceAlpha" operator="in" result="inner-edge"/>
+      <feFlood flood-color="#52687e" flood-opacity=".45"/>
+      <feComposite in2="inner-edge" operator="in"/>
+      <feMerge><feMergeNode in="SourceGraphic"/><feMergeNode/></feMerge>
+    </filter>
+  </defs>
+  <!-- Блик снизу снаружи и тень сверху внутри создают неглубокое вдавливание. -->
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".5">
+    <use href="#power" transform="translate(.7 1)" stroke="#fff" stroke-width="12" opacity=".65"/>
+    <use href="#power" stroke="url(#off-face)" stroke-width="10" filter="url(#inset)"/>
+  </g>
+</svg>

@@ -1,7 +1,8 @@
-# RoyalClima · ESPHome
-
 <p align="center">
-  <img src="docs/royalclima.png" style="max-width: 100%; height: auto; display: block;" alt="Royal Clima">
+  <img src="images/royalclima.png" style="max-width: 100%; height: auto; display: block;" alt="Royal Clima">
+#+#
+  <img src="images/esp32.jpg" style="max-width: 50%; height: auto; display: block;" alt="ESP32">
+  <img src="images/ha.png" style="max-width: 50%; height: auto; display: block;" alt="Home Assistant">
 </p>
 
 Прошивка на базе ESPHome для связи ESP32 с приточно-вытяжной установкой Royal Clima серии **SOFFIO Primo** по Modbus RTU через RS-485. В руководстве серии перечислены модели **RCS-250-P, RCS-350-P, RCS-500-P и RCS-650-P**. Работа проекта проверена на **RCS-650-P**; совместимость с другими моделями и ревизиями контроллера требует проверки.
@@ -15,10 +16,10 @@ ESP32 позволяет получать показания и управлят
 - Скомпилированные прошивки для ESP32: [firmware для первоначальной установки](bin/royalclima-firmware.factory.bin) и [OTA для обновления](bin/royalclima-firmware.ota.bin).
 - [Конфигурацию для ESPHome](ESPHome/RoyalClima.yaml).
 - [Документацию](docs/): [руководство SOFFIO Primo](docs/2020_RC_Manual_Soffio-Primo.pdf) и [протокол Modbus DC (Primo)](docs/Modbus%20protocol%20-%20DC%20%28Primo%29.pdf).
-- Файлы для использования в Hass: [пакет шаблонов и управления](Hass/royal_clima.yaml) и [пример вкладки дашборда](Hass/home-assistant-card.yaml).
+- Файлы для использования в Hass: [пакет шаблонов и управления](Hass/packages/royal_clima.yaml), [примеры дашбордов и карточек](Hass/dashboard/) и [SVG для карточек](Hass/images/).
 
 <p align="center">
-  <img src="docs/soffio.jpg" style="max-width: 100%; height: auto; display: block;" alt="ПВУ">
+  <img src="images/soffio.jpg" style="max-width: 100%; height: auto; display: block;" alt="ПВУ">
 </p>
 
 
@@ -45,7 +46,7 @@ ESP32 позволяет получать показания и управлят
 ### Упрощённая схема подключения
 
 <p align="center">
-  <img src="docs/scheme_ru.png" style="max-width: 100%; height: auto; display: block;" alt="Плата рекуператора">
+  <img src="images/scheme_ru.png" style="max-width: 100%; height: auto; display: block;" alt="Плата рекуператора">
 </p>
 
 ```text
@@ -166,25 +167,25 @@ api:
 
 Ниже приведены имена из YAML. Сущности установки относятся к устройству `Ventilation System`, диагностика ESP32 — к `Royal Clima`. Фактические `entity_id` в HA зависят также от реестра сущностей и ранее выполненных переименований.
 
-**¹** — сущность отключена по умолчанию в HA; при необходимости её можно включить в настройках интеграции. Исходные значения продолжают использоваться прошивкой для вычисления состояний.
+* — сущность отключена по умолчанию в HA; при необходимости её можно включить в настройках интеграции. Исходные значения продолжают использоваться прошивкой для вычисления состояний.
 
 #### Числовые сенсоры установки
 
 | Имя в ESPHome | Назначение | Источник |
 |---|---|---|
-| Power state raw ¹ | Исходное питание: 0 — выключена, 1 — включена | Регистр 9 |
-| Supply fan speed code ¹ | Исходный код ступени притока | Регистр 10 |
-| Exhaust fan speed code ¹ | Исходный код ступени вытяжки | Регистр 11 |
+| Power state raw * | Исходное питание: 0 — выключена, 1 — включена | Регистр 9 |
+| Supply fan speed code * | Исходный код ступени притока | Регистр 10 |
+| Exhaust fan speed code * | Исходный код ступени вытяжки | Регистр 11 |
 | Return air temperature | Возвратный воздух из помещения RA, °C | Регистр 12 |
 | Outdoor air temperature | Наружный воздух OA, °C | Регистр 13 |
 | Supply Air Temperature | Приточный воздух SA, °C | Регистр 14 |
 | Defrost temperature | Датчик разморозки, °C | Регистр 15 |
-| External boost signal raw ¹ | Внешнее форсирование: 0/1 | Регистр 16 |
-| CO2 boost signal raw ¹ | Форсирование по CO₂: 0/1, не ppm | Регистр 17 |
-| Status flags raw ¹ | Исходная маска пожарного входа, байпаса и разморозки | Регистр 18 |
+| External boost signal raw * | Внешнее форсирование: 0/1 | Регистр 16 |
+| CO2 boost signal raw * | Форсирование по CO₂: 0/1, не ppm | Регистр 17 |
+| Status flags raw * | Исходная маска пожарного входа, байпаса и разморозки | Регистр 18 |
 | Humidity setpoint | Уставка влажности 1–99 %, не измерение | Регистр 19 |
-| Error flags raw ¹ | Исходная битовая маска ошибок | Регистр 20 |
-| Filter interval code ¹ | Код 0/1/2/3 → 45/60/90/180 дней | Регистр 25 |
+| Error flags raw * | Исходная битовая маска ошибок | Регистр 20 |
+| Filter interval code * | Код 0/1/2/3 → 45/60/90/180 дней | Регистр 25 |
 | Heater temperature setpoint | Уставка температуры нагревателя 10–25 °C | Регистр 27 |
 | Supply fan speed | Ступень притока 0–10 | Из регистра 10 |
 | Exhaust fan speed | Ступень вытяжки 0–10 | Из регистра 11 |
@@ -199,7 +200,7 @@ api:
 | Vent system Online | Состояние связи с рекуператором | Диагностика Modbus |
 | Ventilation power | Включена/выключена по регистру; не подтверждение вращения вентиляторов | Регистр 9 |
 | Bypass open | Байпас открыт/закрыт; при одинаковых битах открытия и закрытия — неизвестно | Регистр 18, биты 1–2 |
-| Bypass closed ¹ | Дополнительный отдельный признак закрытия | Регистр 18, бит 2 |
+| Bypass closed * | Дополнительный отдельный признак закрытия | Регистр 18, бит 2 |
 | Defrost active | Активна разморозка | Регистр 18, бит 3 |
 | Fire alarm | Активен пожарный вход установки | Регистр 18, бит 0 |
 | Ventilation error | Есть ошибка: ненулевая маска | Регистр 20 |
@@ -238,7 +239,7 @@ api:
 
 ### Пакет шаблонов и управления
 
-[Hass/royal_clima.yaml](Hass/royal_clima.yaml) — пакет HA с шаблонным выключателем и двумя селекторами, которые могут понадобиться в UI.
+[Hass/packages/royal_clima.yaml](Hass/packages/royal_clima.yaml) — пакет HA с шаблонным выключателем и двумя селекторами, которые могут понадобиться в UI.
 
 1. Скопируйте файл в `/config/packages/royal_clima.yaml`.
 2. Подключите пакеты в `configuration.yaml`, объединив настройку с уже существующим разделом `homeassistant`, если он есть:
@@ -273,10 +274,43 @@ api:
     option: "3"
 ```
 
+### Карточки для дашбордов
+
+В [Hass/dashboard](Hass/dashboard/) находятся два примера отдельных карточек и полная вкладка:
+
+| Файл | Что показывает | Дополнительные ресурсы |
+|---|---|---|
+| [royal-clima-panel.yaml](Hass/dashboard/royal-clima-panel.yaml) | Пульт с температурами, ступенями вентиляторов, питанием и индикаторами состояний | [card-mod](https://github.com/thomasloven/lovelace-card-mod) |
+| [royal-clima-airflow.yaml](Hass/dashboard/royal-clima-airflow.yaml) | Схема потоков с температурами, ступенями и кнопкой питания | [Mushroom](https://github.com/piitaya/lovelace-mushroom) для индикаторов активных состояний |
+| [royal-clima-vent-tab.yaml](Hass/dashboard/royal-clima-vent-tab.yaml) | Полная вкладка «ПВУ» с управлением, графиками и диагностикой | [Mushroom](https://github.com/piitaya/lovelace-mushroom), [stack-in-card](https://github.com/custom-cards/stack-in-card), [fold-entity-row](https://github.com/thomasloven/lovelace-fold-entity-row) |
+
+**Пульт управления**
+![Пример пульта управления](images/control_work.png)
+
+**Схема потоков — установка работает**
+![Схема потоков при включённой установке](images/flow_work.png)
+
+**Схема потоков — установка выключена**
+![Схема потоков при выключенной установке](images/flow_off.png)
+
+**Схема потоков — нет связи**
+![Схема потоков при отсутствии связи](images/flow_unavail.png)
+
+Для установки отдельных карточек:
+
+1. Подключите пакет [royal_clima.yaml](Hass/packages/royal_clima.yaml), как описано выше, и установите необходимые дополнительные ресурсы.
+2. Скопируйте **все шесть SVG** из [Hass/images](Hass/images/) в каталог **`/config/www/images/`** Home Assistant, сохранив имена файлов. Если каталогов `www` или `images` нет, создайте их. Копировать корневой каталог `images` репозитория не нужно — он содержит иллюстрации для README.
+3. В YAML уже указаны адреса `/local/images/имя-файла.svg`: например, `/config/www/images/royal-clima-panel.svg` доступен как `/local/images/royal-clima-panel.svg`. Если `www` создан впервые, перезапустите Home Assistant. См. [размещение локальных файлов в HA](https://www.home-assistant.io/integrations/http/#hosting-files).
+4. Откройте нужный дашборд → режим редактирования → «Добавить карточку» → «Вручную». Вставьте целиком YAML пульта или схемы потоков, проверьте `entity_id` и сохраните. Каждую карточку можно добавить на нужную вкладку отдельно.
+5. Для полной вкладки `royal-clima-vent-tab.yaml` используйте YAML-редактор **вкладки**, а не редактор одной карточки. Подробности — ниже. После замены SVG обновите страницу; если отображается прежняя версия, очистите кеш браузера.
+
+Карточки используют штатный тип `picture-elements`. Вращение вентиляторов означает включённую установку и ненулевую ступень, а стрелки — направления потоков.
+
 ### Пример дашборда
 
-[Hass/home-assistant-card.yaml](Hass/home-assistant-card.yaml) содержит пример вкладки «ПВУ», а не одну карточку. Вставьте содержимое в YAML-редактор конфигурации отдельной вкладки дашборда.
+[Hass/dashboard/royal-clima-vent-tab.yaml](Hass/dashboard/royal-clima-vent-tab.yaml) содержит пример вкладки «ПВУ», а не одну карточку. Вставьте содержимое в YAML-редактор конфигурации отдельной вкладки дашборда.
 
+![Пример вкладки «ПВУ»](images/vent-work.png)
 Нужны установленные и подключённые ресурсы [Mushroom](https://github.com/piitaya/lovelace-mushroom), [stack-in-card](https://github.com/custom-cards/stack-in-card) и [fold-entity-row](https://github.com/thomasloven/lovelace-fold-entity-row). Для температурного графика показания должны сохраняться Recorder.
 
 Вкладка включает:
