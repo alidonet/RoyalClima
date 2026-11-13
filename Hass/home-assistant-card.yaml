@@ -1,5 +1,5 @@
 # YAML всей вкладки «ПВУ»: вставить в редактор конфигурации вкладки.
-# Требуются Mushroom, stack-in-card, mini-graph-card и fold-entity-row.
+# Требуются Mushroom, stack-in-card и fold-entity-row.
 # Управление использует обёртки из пакета royal_clima.yaml; подключите его в HA.
 # После вставки проверьте предпросмотр; перезапуск HA для изменения вкладки не нужен.
 # Если отдельная сущность переименована в HA, поправьте её полный entity_id.
@@ -21,7 +21,7 @@ badges:
     entity: switch.mega1_port9
   - type: custom:mushroom-template-badge
     entity: binary_sensor.royal_clima_esp32_connection
-    label: ESP32
+    label: ESP32 · HA
     content: >-
       {% set state = states('binary_sensor.royal_clima_esp32_connection') %}
       {{ 'Подключено' if state == 'on' else
@@ -33,11 +33,30 @@ badges:
     tap_action:
       action: more-info
   - type: custom:mushroom-template-badge
+    entity: binary_sensor.ventilation_system_vent_system_online
+    label: ПВУ · Modbus
+    content: >-
+      {% if not is_state('binary_sensor.royal_clima_esp32_connection', 'on') %}
+        Нет связи с ESP32
+      {% elif is_state('binary_sensor.ventilation_system_vent_system_online', 'on') %}
+        Подключено
+      {% else %}
+        Нет ответа
+      {% endif %}
+    icon: mdi:lan-connect
+    color: >-
+      {{ 'green' if is_state('binary_sensor.royal_clima_esp32_connection', 'on')
+         and is_state('binary_sensor.ventilation_system_vent_system_online', 'on') else 'red' }}
+    tap_action:
+      action: more-info
+  - type: custom:mushroom-template-badge
     entity: sensor.royal_clima_uptime
     label: ESP Uptime
     content: >-
       {% set value = states('sensor.royal_clima_uptime') %}
-      {% if is_number(value) and (value | float(0)) >= 0 %}
+      {% if not is_state('binary_sensor.royal_clima_esp32_connection', 'on') %}
+        Нет связи
+      {% elif is_number(value) and (value | float(0)) >= 0 %}
         {% set seconds = value | int(0) %}
         {{ seconds // 86400 }} д. {{ (seconds % 86400) // 3600 }} ч. {{ (seconds % 3600) // 60 }} мин.
       {% else %}
@@ -75,26 +94,20 @@ sections:
           - type: markdown
             content: |
               ## Royal Clima · Рекуператор
-              {{ states('sensor.ventilation_system_ventilation_status') }}
+              {% if not is_state('binary_sensor.royal_clima_esp32_connection', 'on') %}
+              **Нет связи с ESP32.**
 
-          - type: entities
-            show_header_toggle: false
-            state_color: true
-            entities:
-              - entity: binary_sensor.ventilation_system_vent_system_online
-                name: Связь с рекуператором
-              - entity: binary_sensor.ventilation_system_ventilation_power
-                name: Состояние установки
+              Проверьте питание ESP32, Wi-Fi и подключение ESPHome к HA.
+              {% elif not is_state('binary_sensor.ventilation_system_vent_system_online', 'on') %}
+              **ESP32 подключён, но рекуператор не отвечает по Modbus.**
 
-          - type: conditional
-            conditions:
-              - entity: binary_sensor.ventilation_system_vent_system_online
-                state_not: "on"
-            card:
-              type: markdown
-              content: |
-                **Нет подтверждённой связи с рекуператором.**
-                Проверьте ESP32 и Modbus. Показания могут быть устаревшими.
+              Проверьте питание установки и соединение RS-485.
+              Управление скрыто до восстановления обмена.
+              {% else %}
+              {% set status = states('sensor.ventilation_system_ventilation_status') %}
+              {{ status if status not in ['unknown', 'unavailable', 'Нет актуальных данных']
+                 else 'Связь установлена. Ожидаем актуальный статус.' }}
+              {% endif %}
 
           - type: conditional
             conditions:
@@ -119,6 +132,8 @@ sections:
 
           - type: conditional
             conditions:
+              - entity: binary_sensor.royal_clima_esp32_connection
+                state: "on"
               - entity: binary_sensor.ventilation_system_vent_system_online
                 state: "on"
             card:
@@ -136,74 +151,131 @@ sections:
 
   - type: grid
     cards:
-      - type: custom:mini-graph-card
-        # Для графика сущности температур должны записываться Recorder.
+      - type: conditional
         grid_options:
           columns: 12
           rows: auto
-        name: Температуры · 24 часа
-        icon: mdi:thermometer
-        hours_to_show: 24
-        points_per_hour: 4
-        line_width: 2
-        decimals: 0
-        show:
-          labels: true
-          legend: true
-        entities:
-          - entity: sensor.ventilation_system_outdoor_air_temperature
-            name: Улица · OA
-            color: "#42a5f5"
-            show_state: true
-          - entity: sensor.ventilation_system_return_air_temperature
-            name: Из помещения · RA
-            color: "#ffb74d"
-            show_state: true
-          - entity: sensor.ventilation_system_defrost_temperature
-            name: Датчик разморозки
-            color: "#ab47bc"
-            show_state: true
-          - entity: sensor.ventilation_system_supply_air_temperature
-            name: Приток · SA
-            color: "#66bb6a"
-            show_state: true
+        # График показываем только при наличии обеих связей. Пропуски не заменяем нулями.
+        conditions:
+          - entity: binary_sensor.royal_clima_esp32_connection
+            state: "on"
+          - entity: binary_sensor.ventilation_system_vent_system_online
+            state: "on"
+        card:
+          type: vertical-stack
+          cards:
+            - type: entities
+              title: Температуры сейчас
+              show_header_toggle: false
+              entities:
+                - entity: sensor.ventilation_system_outdoor_air_temperature
+                  name: Улица · OA
+                - entity: sensor.ventilation_system_return_air_temperature
+                  name: Из помещения · RA
+                - entity: sensor.ventilation_system_supply_air_temperature
+                  name: Приток · SA
+                - entity: sensor.ventilation_system_defrost_temperature
+                  name: Датчик разморозки
+            - type: history-graph
+              # Сущности температур должны записываться Recorder.
+              title: Температуры · 24 часа
+              hours_to_show: 24
+              entities:
+                - entity: sensor.ventilation_system_outdoor_air_temperature
+                  name: Улица · OA
+                  color: "#42a5f5"
+                - entity: sensor.ventilation_system_return_air_temperature
+                  name: Из помещения · RA
+                  color: "#ffb74d"
+                - entity: sensor.ventilation_system_supply_air_temperature
+                  name: Приток · SA
+                  color: "#66bb6a"
+                - entity: sensor.ventilation_system_defrost_temperature
+                  name: Датчик разморозки
+                  color: "#ab47bc"
+      - type: conditional
+        grid_options:
+          columns: 12
+          rows: auto
+        conditions:
+          - condition: or
+            conditions:
+              - condition: state
+                entity: binary_sensor.royal_clima_esp32_connection
+                state_not: "on"
+              - condition: state
+                entity: binary_sensor.ventilation_system_vent_system_online
+                state_not: "on"
+        card:
+          type: markdown
+          content: |
+            ### Температуры
+            Нет актуальных данных от рекуператора.
+
+            Показания и график появятся автоматически после восстановления связи.
+            Сохранённую историю можно открыть на странице сущности температуры.
 
   - type: grid
     cards:
-      - type: entities
-        title: Состояния и диагностика
+      - type: custom:stack-in-card
+        mode: vertical
         grid_options:
           columns: 12
           rows: auto
-        show_header_toggle: false
-        state_color: true
-        entities:
-          - entity: binary_sensor.ventilation_system_bypass_open
-            name: Байпас
-          - entity: binary_sensor.ventilation_system_defrost_active
-            name: Разморозка
-          - entity: binary_sensor.ventilation_system_external_boost_active
-            name: Внешнее форсирование
-          - entity: binary_sensor.ventilation_system_co2_boost_active
-            name: Форсирование по CO₂
-          - type: custom:fold-entity-row
-            head:
-              type: section
-              label: Диагностика и уставки
+        cards:
+          - type: markdown
+            content: |
+              ### Состояния и диагностика
+              {% if not is_state('binary_sensor.royal_clima_esp32_connection', 'on')
+                    or not is_state('binary_sensor.ventilation_system_vent_system_online', 'on') %}
+              Рабочие состояния недоступны. Диагностику соединения можно раскрыть ниже.
+              {% endif %}
+          - type: conditional
+            conditions:
+              - entity: binary_sensor.royal_clima_esp32_connection
+                state: "on"
+              - entity: binary_sensor.ventilation_system_vent_system_online
+                state: "on"
+            card:
+              type: entities
+              show_header_toggle: false
+              state_color: true
+              entities:
+                - entity: binary_sensor.ventilation_system_bypass_open
+                  name: Байпас
+                - entity: binary_sensor.ventilation_system_defrost_active
+                  name: Разморозка
+                - entity: binary_sensor.ventilation_system_external_boost_active
+                  name: Внешнее форсирование
+                - entity: binary_sensor.ventilation_system_co2_boost_active
+                  name: Форсирование по CO₂
+          - type: entities
+            show_header_toggle: false
             entities:
-              - entity: sensor.ventilation_system_error_description
-                name: Расшифровка ошибок
-              - entity: sensor.ventilation_system_supply_fan_speed
-                name: Приток · ступень по регистру
-              - entity: sensor.ventilation_system_exhaust_fan_speed
-                name: Вытяжка · ступень по регистру
-              - entity: sensor.ventilation_system_humidity_setpoint
-                name: Уставка влажности (не измерение)
-              - entity: sensor.ventilation_system_heater_temperature_setpoint
-                name: Уставка нагревателя · °C
-              - entity: sensor.ventilation_system_filter_reminder_interval
-                name: Интервал фильтра (не остаток)
-              - entity: sensor.ventilation_system_seconds_since_last_data
-                name: Давность чтения регистра 9
-              - entity: sensor.ventilation_system_offline_events
-                name: Потери связи после запуска ESP32
+              - type: custom:fold-entity-row
+                head:
+                  type: section
+                  label: Диагностика и уставки
+                entities:
+                  - entity: binary_sensor.royal_clima_esp32_connection
+                    name: ESP32 → Home Assistant
+                  - entity: binary_sensor.ventilation_system_vent_system_online
+                    name: ESP32 → рекуператор · Modbus
+                  - entity: sensor.ventilation_system_seconds_since_last_data
+                    name: Давность чтения регистра 9
+                  - entity: sensor.ventilation_system_offline_events
+                    name: Потери связи после запуска ESP32
+                  - entity: binary_sensor.ventilation_system_ventilation_power
+                    name: Состояние установки по регистру
+                  - entity: sensor.ventilation_system_error_description
+                    name: Расшифровка ошибок
+                  - entity: sensor.ventilation_system_supply_fan_speed
+                    name: Приток · ступень по регистру
+                  - entity: sensor.ventilation_system_exhaust_fan_speed
+                    name: Вытяжка · ступень по регистру
+                  - entity: sensor.ventilation_system_humidity_setpoint
+                    name: Уставка влажности (не измерение)
+                  - entity: sensor.ventilation_system_heater_temperature_setpoint
+                    name: Уставка нагревателя · °C
+                  - entity: sensor.ventilation_system_filter_reminder_interval
+                    name: Интервал фильтра (не остаток)
