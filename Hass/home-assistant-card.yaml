@@ -1,0 +1,209 @@
+# YAML всей вкладки «ПВУ»: вставить в редактор конфигурации вкладки.
+# Требуются Mushroom, stack-in-card, mini-graph-card и fold-entity-row.
+# Управление использует обёртки из пакета royal_clima.yaml; подключите его в HA.
+# После вставки проверьте предпросмотр; перезапуск HA для изменения вкладки не нужен.
+# Если отдельная сущность переименована в HA, поправьте её полный entity_id.
+type: sections
+title: ПВУ
+path: vent
+max_columns: 3
+badges:
+  - type: entity
+    show_name: true
+    show_state: true
+    show_icon: true
+    entity: binary_sensor.mega1_port2
+    color: ""
+  - type: entity
+    show_name: true
+    show_state: true
+    show_icon: true
+    entity: switch.mega1_port9
+  - type: custom:mushroom-template-badge
+    entity: binary_sensor.royal_clima_esp32_connection
+    label: ESP32
+    content: >-
+      {% set state = states('binary_sensor.royal_clima_esp32_connection') %}
+      {{ 'Подключено' if state == 'on' else
+         'Нет связи' if state == 'off' else 'Нет данных' }}
+    icon: mdi:chip
+    color: >-
+      {% set state = states('binary_sensor.royal_clima_esp32_connection') %}
+      {{ 'green' if state == 'on' else 'red' if state == 'off' else 'grey' }}
+    tap_action:
+      action: more-info
+  - type: custom:mushroom-template-badge
+    entity: sensor.royal_clima_uptime
+    label: ESP Uptime
+    content: >-
+      {% set value = states('sensor.royal_clima_uptime') %}
+      {% if is_number(value) and (value | float(0)) >= 0 %}
+        {% set seconds = value | int(0) %}
+        {{ seconds // 86400 }} д. {{ (seconds % 86400) // 3600 }} ч. {{ (seconds % 3600) // 60 }} мин.
+      {% else %}
+        Нет данных
+      {% endif %}
+    icon: mdi:timer-outline
+    color: blue
+    tap_action:
+      action: more-info
+  - type: entity
+    entity: button.royal_clima_esp32_reboot
+    # Перезапускает только ESP32, а не контроллер рекуператора.
+    name: Restart ESP
+    icon: mdi:restart
+    color: blue
+    show_name: true
+    show_state: false
+    show_icon: true
+    tap_action:
+      action: perform-action
+      perform_action: button.press
+      target:
+        entity_id: button.royal_clima_esp32_reboot
+      confirmation:
+        text: Перезагрузить ESP32 рекуператора?
+sections:
+  - type: grid
+    cards:
+      - type: custom:stack-in-card
+        mode: vertical
+        grid_options:
+          columns: 12
+          rows: auto
+        cards:
+          - type: markdown
+            content: |
+              ## Royal Clima · Рекуператор
+              {{ states('sensor.ventilation_system_ventilation_status') }}
+
+          - type: entities
+            show_header_toggle: false
+            state_color: true
+            entities:
+              - entity: binary_sensor.ventilation_system_vent_system_online
+                name: Связь с рекуператором
+              - entity: binary_sensor.ventilation_system_ventilation_power
+                name: Состояние установки
+
+          - type: conditional
+            conditions:
+              - entity: binary_sensor.ventilation_system_vent_system_online
+                state_not: "on"
+            card:
+              type: markdown
+              content: |
+                **Нет подтверждённой связи с рекуператором.**
+                Проверьте ESP32 и Modbus. Показания могут быть устаревшими.
+
+          - type: conditional
+            conditions:
+              - entity: binary_sensor.ventilation_system_fire_alarm
+                state: "on"
+            card:
+              type: markdown
+              content: |
+                ## 🔴 Пожарный сигнал
+                Активен пожарный вход рекуператора.
+
+          - type: conditional
+            conditions:
+              - entity: binary_sensor.ventilation_system_ventilation_error
+                state: "on"
+            card:
+              type: markdown
+              content: |
+                **⚠️ Ошибка рекуператора**
+
+                {{ states('sensor.ventilation_system_error_description') }}
+
+          - type: conditional
+            conditions:
+              - entity: binary_sensor.ventilation_system_vent_system_online
+                state: "on"
+            card:
+              type: entities
+              title: Управление
+              show_header_toggle: false
+              state_color: true
+              entities:
+                - entity: switch.royal_clima_power
+                  name: Включение установки
+                - entity: select.royal_clima_supply_speed
+                  name: Приток · ступень 0–10
+                - entity: select.royal_clima_exhaust_speed
+                  name: Вытяжка · ступень 0–10
+
+  - type: grid
+    cards:
+      - type: custom:mini-graph-card
+        # Для графика сущности температур должны записываться Recorder.
+        grid_options:
+          columns: 12
+          rows: auto
+        name: Температуры · 24 часа
+        icon: mdi:thermometer
+        hours_to_show: 24
+        points_per_hour: 4
+        line_width: 2
+        decimals: 0
+        show:
+          labels: true
+          legend: true
+        entities:
+          - entity: sensor.ventilation_system_outdoor_air_temperature
+            name: Улица · OA
+            color: "#42a5f5"
+            show_state: true
+          - entity: sensor.ventilation_system_return_air_temperature
+            name: Из помещения · RA
+            color: "#ffb74d"
+            show_state: true
+          - entity: sensor.ventilation_system_defrost_temperature
+            name: Датчик разморозки
+            color: "#ab47bc"
+            show_state: true
+          - entity: sensor.ventilation_system_supply_air_temperature
+            name: Приток · SA
+            color: "#66bb6a"
+            show_state: true
+
+  - type: grid
+    cards:
+      - type: entities
+        title: Состояния и диагностика
+        grid_options:
+          columns: 12
+          rows: auto
+        show_header_toggle: false
+        state_color: true
+        entities:
+          - entity: binary_sensor.ventilation_system_bypass_open
+            name: Байпас
+          - entity: binary_sensor.ventilation_system_defrost_active
+            name: Разморозка
+          - entity: binary_sensor.ventilation_system_external_boost_active
+            name: Внешнее форсирование
+          - entity: binary_sensor.ventilation_system_co2_boost_active
+            name: Форсирование по CO₂
+          - type: custom:fold-entity-row
+            head:
+              type: section
+              label: Диагностика и уставки
+            entities:
+              - entity: sensor.ventilation_system_error_description
+                name: Расшифровка ошибок
+              - entity: sensor.ventilation_system_supply_fan_speed
+                name: Приток · ступень по регистру
+              - entity: sensor.ventilation_system_exhaust_fan_speed
+                name: Вытяжка · ступень по регистру
+              - entity: sensor.ventilation_system_humidity_setpoint
+                name: Уставка влажности (не измерение)
+              - entity: sensor.ventilation_system_heater_temperature_setpoint
+                name: Уставка нагревателя · °C
+              - entity: sensor.ventilation_system_filter_reminder_interval
+                name: Интервал фильтра (не остаток)
+              - entity: sensor.ventilation_system_seconds_since_last_data
+                name: Давность чтения регистра 9
+              - entity: sensor.ventilation_system_offline_events
+                name: Потери связи после запуска ESP32

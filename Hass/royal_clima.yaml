@@ -1,0 +1,83 @@
+# Пакет royal_clima для homeassistant.packages: !include_dir_merge_named packages.
+# Скопировать этот файл в /config/packages/royal_clima.yaml.
+# Исходные entity_id взяты из примеров пользователя; сверить в HA перед подключением.
+# Управление доступно только при online и наличии подтверждённого состояния.
+# Исходные ESPHome-сущности не переименовываются; для управления использовать обёртки ниже.
+royal_clima:
+  template:
+    - switch:
+        - name: "Royal Clima power"
+          unique_id: royal_clima_power
+          default_entity_id: switch.royal_clima_power
+          icon: mdi:power
+          availability: >-
+            {{ is_state('binary_sensor.ventilation_system_vent_system_online', 'on')
+               and states('binary_sensor.ventilation_system_ventilation_power') in ['on', 'off']
+               and has_value('switch.ventilation_system_ventilation_control') }}
+          state: "{{ is_state('binary_sensor.ventilation_system_ventilation_power', 'on') }}"
+          turn_on:
+            - condition: state
+              entity_id: binary_sensor.ventilation_system_vent_system_online
+              state: "on"
+            - action: switch.turn_on
+              target:
+                entity_id: switch.ventilation_system_ventilation_control
+          turn_off:
+            - condition: state
+              entity_id: binary_sensor.ventilation_system_vent_system_online
+              state: "on"
+            - action: switch.turn_off
+              target:
+                entity_id: switch.ventilation_system_ventilation_control
+
+    - select:
+        # Скорость притока: состояние только по прочитанному регистру, без оптимистического переключения.
+        - name: "Royal Clima supply speed"
+          unique_id: royal_clima_supply_speed
+          default_entity_id: select.royal_clima_supply_speed
+          icon: mdi:fan
+          availability: >-
+            {{ is_state('binary_sensor.ventilation_system_vent_system_online', 'on')
+               and is_number(states('sensor.ventilation_system_supply_fan_speed'))
+               and (states('sensor.ventilation_system_supply_fan_speed') | int(-1)) in range(0, 11)
+               and has_value('select.ventilation_system_supply_speed_control') }}
+          state: >-
+            {% set speed = states('sensor.ventilation_system_supply_fan_speed') | int(-1) %}
+            {{ 'Стоп' if speed == 0 else (speed | string) }}
+          options: "{{ ['Стоп', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'] }}"
+          select_option:
+            - condition: state
+              entity_id: binary_sensor.ventilation_system_vent_system_online
+              state: "on"
+            - condition: template
+              value_template: "{{ option in (state_attr('select.ventilation_system_supply_speed_control', 'options') or []) }}"
+            - action: select.select_option
+              target:
+                entity_id: select.ventilation_system_supply_speed_control
+              data:
+                option: "{{ option }}"
+        # Скорость вытяжки: состояние только по прочитанному регистру, без оптимистического переключения.
+        - name: "Royal Clima exhaust speed"
+          unique_id: royal_clima_exhaust_speed
+          default_entity_id: select.royal_clima_exhaust_speed
+          icon: mdi:fan
+          availability: >-
+            {{ is_state('binary_sensor.ventilation_system_vent_system_online', 'on')
+               and is_number(states('sensor.ventilation_system_exhaust_fan_speed'))
+               and (states('sensor.ventilation_system_exhaust_fan_speed') | int(-1)) in range(0, 11)
+               and has_value('select.ventilation_system_exhaust_speed_control') }}
+          state: >-
+            {% set speed = states('sensor.ventilation_system_exhaust_fan_speed') | int(-1) %}
+            {{ 'Стоп' if speed == 0 else (speed | string) }}
+          options: "{{ ['Стоп', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'] }}"
+          select_option:
+            - condition: state
+              entity_id: binary_sensor.ventilation_system_vent_system_online
+              state: "on"
+            - condition: template
+              value_template: "{{ option in (state_attr('select.ventilation_system_exhaust_speed_control', 'options') or []) }}"
+            - action: select.select_option
+              target:
+                entity_id: select.ventilation_system_exhaust_speed_control
+              data:
+                option: "{{ option }}"
