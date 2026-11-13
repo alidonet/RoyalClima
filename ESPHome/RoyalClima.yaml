@@ -6,8 +6,19 @@ substitutions:
   baud_rate: "9600"  # SW4-4: ON = 9600, OFF = 4800.
   modbus_address: "1"  # Controller parameter 08.
   refresh_interval: 10s
+  response_timeout: 1500ms
+  stale_timeout: 60s  # Keep the last reading for one minute without updates.
 
 globals:
+  - id: last_reply_ms
+    type: uint32_t
+    initial_value: '0'
+  - id: has_reply
+    type: bool
+    initial_value: 'false'
+  - id: offline_count
+    type: uint32_t
+    initial_value: '0'
   - id: global_vent_online
     type: bool
     initial_value: "false"
@@ -17,8 +28,8 @@ esphome:
   friendly_name: Royal Clima
   comment: "Read-only Modbus diagnostics for Royal Clima RCS-650-P"
   project:
-    name: "alidonet.royalclima"
-    version: 0.1.261107
+    name: alidonet.royalclima
+    version: 0.2.261113
   devices:
     - id: device_vent
       name: "Ventilation System"
@@ -36,19 +47,21 @@ wifi:
   networks:
     - ssid: !secret wifi_ssid
       password: !secret wifi_password
+      priority: 2
+      id: WifiHouse
       #manual_ip:
       #  static_ip: !secret esp_rc_ip_address
       #  gateway: !secret esp_ip_gateway
       #  subnet: 255.255.255.0
     - ssid: !secret wifi_ssid2
       password: !secret wifi_password2
-      manual_ip:
-        static_ip: !secret esp_rc_ip_address2
-        gateway: !secret esp_ip_gateway2
-        subnet: 255.255.255.0
+      id: WifiHomework
+      #manual_ip:
+      #  static_ip: !secret esp_rc_ip_address2
+      #  gateway: !secret esp_ip_gateway2
+      #  subnet: 255.255.255.0
   ap:
-    # ap_timeout: 30s
-
+    ap_timeout: 90s
 captive_portal:
 
 # If you use Home Assistant please remove this `mqtt` section and uncomment the `api` component!
@@ -70,12 +83,11 @@ logger:
 web_server:
   local: true
   port: 80
+  version: 2
 
-light:
-  - platform: status_led
-    name: "ESP32 LED"
+output:
+  - platform: gpio
     id: led_output
-    # device_id: device_esp
     pin: GPIO2
 
 uart:
@@ -92,8 +104,8 @@ uart:
 modbus:
   id: royalclima_modbus
   uart_id: royalclima_uart
-  send_wait_time: 2s
-  turnaround_time: 1s
+  send_wait_time: ${response_timeout}
+  turnaround_time: 100ms
 
 modbus_controller:
   - id: royalclima_controller
@@ -101,7 +113,7 @@ modbus_controller:
     address: ${modbus_address}
     update_interval: ${refresh_interval}
     max_cmd_retries: 1
-    offline_skip_updates: 2
+    offline_skip_updates: 0
     on_online: 
       then:
         - globals.set: 
@@ -112,6 +124,7 @@ modbus_controller:
             level: info
     on_offline: 
       then:
+        - lambda: id(offline_count) += 1;
         - globals.set: 
             id: global_vent_online
             value: "false"
@@ -123,19 +136,23 @@ modbus_controller:
 #  - platform: sntp
 
 # Only holding-register reads (FC03); no writes or startup commands.
-# Registers 9-15 form one contiguous read; 18 and 20 are separate reads.
+# Registers 9-20 form one contiguous read; 25 and 27 are separate reads.
 # timeout marks stale measurements unknown if valid replies stop arriving.
 sensor:
   - platform: modbus_controller
     modbus_controller_id: royalclima_controller
+    id: power_raw
+    # Регистр 9 (RW): исходное состояние установки, 0 — выключена, 1 — включена. Отключён по умолчанию.
     name: "Power state raw"
+    disabled_by_default: true
+    entity_category: diagnostic
     address: 9
     register_type: holding
     value_type: U_WORD
     accuracy_decimals: 0
     device_id: device_vent
     filters:
-      - timeout: 40s
+      - timeout: ${stale_timeout}
     on_value:
       then:
         - if:
@@ -145,9 +162,12 @@ sensor:
               - globals.set:
                   id: global_vent_online
                   value: "true"
-              - light.turn_on: led_output
+              - lambda: |-
+                  id(last_reply_ms) = millis();
+                  id(has_reply) = true;
+              - output.turn_on: led_output
               - delay: 150ms
-              - light.turn_off: led_output
+              - output.turn_off: led_output
             else:
               - globals.set:
                   id: global_vent_online
@@ -155,7 +175,11 @@ sensor:
 
   - platform: modbus_controller
     modbus_controller_id: royalclima_controller
+    id: supply_raw
+    # Регистр 10 (RW): исходный код скорости приточного вентилятора. Отключён по умолчанию.
     name: "Supply fan speed code"
+    disabled_by_default: true
+    entity_category: diagnostic
     address: 10
     register_type: holding
     value_type: U_WORD
@@ -163,21 +187,26 @@ sensor:
     # Speed 0-10 maps to 0, 2, 3, 5, 8, 9, 10, 11, 12, 13, 14.
     device_id: device_vent
     filters:
-      - timeout: 40s
+      - timeout: ${stale_timeout}
 
   - platform: modbus_controller
     modbus_controller_id: royalclima_controller
+    id: exhaust_raw
+    # Регистр 11 (RW): исходный код скорости вытяжного вентилятора. Отключён по умолчанию.
     name: "Exhaust fan speed code"
+    disabled_by_default: true
+    entity_category: diagnostic
     address: 11
     register_type: holding
     value_type: U_WORD
     accuracy_decimals: 0
     device_id: device_vent
     filters:
-      - timeout: 40s
+      - timeout: ${stale_timeout}
 
   - platform: modbus_controller
     modbus_controller_id: royalclima_controller
+    # Регистр 12 (R): температура комнатного/возвратного воздуха RA, °C; исходное значение минус 40.
     name: "Return air temperature"
     address: 12
     register_type: holding
@@ -189,10 +218,11 @@ sensor:
     device_id: device_vent
     filters:
       - offset: -40
-      - timeout: 40s
+      - timeout: ${stale_timeout}
 
   - platform: modbus_controller
     modbus_controller_id: royalclima_controller
+    # Регистр 13 (R): температура наружного воздуха OA, °C; исходное значение минус 40.
     name: "Outdoor air temperature"
     address: 13
     register_type: holding
@@ -204,12 +234,15 @@ sensor:
     device_id: device_vent
     filters:
       - offset: -40
-      - timeout: 40s
+      - timeout: ${stale_timeout}
 
   - platform: modbus_controller
     modbus_controller_id: royalclima_controller
-    # Manuals disagree on SA/EA: compare with the wall controller first.
+    # DC (Primo) protocol: supply air temperature; keep the existing entity name.
+    # Регистр 14 (R): температура приточного воздуха SA, °C; исходное значение минус 40.
     name: "Temperature register 14"
+    disabled_by_default: true
+    entity_category: diagnostic
     address: 14
     register_type: holding
     value_type: U_WORD
@@ -220,10 +253,11 @@ sensor:
     device_id: device_vent
     filters:
       - offset: -40
-      - timeout: 40s
+      - timeout: ${stale_timeout}
 
   - platform: modbus_controller
     modbus_controller_id: royalclima_controller
+    # Регистр 15 (R): температура датчика разморозки, °C; исходное значение минус 40.
     name: "Defrost temperature"
     address: 15
     register_type: holding
@@ -235,11 +269,14 @@ sensor:
     device_id: device_vent
     filters:
       - offset: -40
-      - timeout: 40s
+      - timeout: ${stale_timeout}
 
   - platform: modbus_controller
     modbus_controller_id: royalclima_controller
+    id: status_raw
+    # Регистр 18 (R): битовая маска пожарного сигнала, положения байпаса и разморозки. Отключён по умолчанию.
     name: "Status flags raw"
+    disabled_by_default: true
     address: 18
     register_type: holding
     value_type: U_WORD
@@ -248,40 +285,412 @@ sensor:
     # Bits: 0 fire alarm, 1 bypass open, 2 bypass closed, 3 defrost.
     device_id: device_vent
     filters:
-      - timeout: 40s
+      - timeout: ${stale_timeout}
 
   - platform: modbus_controller
     modbus_controller_id: royalclima_controller
+    id: error_raw
+    # Регистр 20 (R): битовая маска ошибок по DC-протоколу. Отключён по умолчанию.
     name: "Error flags raw"
+    disabled_by_default: true
     address: 20
     register_type: holding
     value_type: U_WORD
     accuracy_decimals: 0
     entity_category: diagnostic
-    # Error bit meanings differ between protocol revisions.
+    # Error bits follow docs/Modbus protocol - DC (Primo).pdf.
     device_id: device_vent
     filters:
-      - timeout: 40s
+      - timeout: ${stale_timeout}
 
   - platform: wifi_signal
+    # Уровень принимаемого сигнала Wi-Fi ESP32, дБм.
     name: "WiFi signal"
     update_interval: 60s
     entity_category: diagnostic
 
   - platform: uptime
+    # Время работы ESP32 с последней перезагрузки, секунды.
     name: "Uptime"
+    icon: mdi:clock-outline
     update_interval: 60s
     entity_category: diagnostic
 
+  - platform: template
+    # Время с последнего успешного чтения регистра 9, секунды; не относится к ответам других групп.
+    name: "Seconds since last data"
+    icon: mdi:timer-outline
+    device_id: device_vent
+    unit_of_measurement: s
+    accuracy_decimals: 0
+    entity_category: diagnostic
+    update_interval: 30s
+    lambda: |-
+      if (!id(has_reply)) return NAN;
+      return (uint32_t(millis()) - id(last_reply_ms)) / 1000.0f;
+
+  - platform: template
+    # Число переходов Modbus-контроллера в offline с последней перезагрузки ESP32.
+    name: "Offline events"
+    icon: mdi:counter
+    device_id: device_vent
+    accuracy_decimals: 0
+    state_class: total_increasing
+    entity_category: diagnostic
+    update_interval: ${refresh_interval}
+    lambda: return id(offline_count);
+  - platform: template
+    # Ступень скорости приточного вентилятора, 0–10, вычисленная из регистра 10; не измеренные обороты.
+    name: "Supply fan speed"
+    icon: mdi:fan-chevron-down
+    device_id: device_vent
+    accuracy_decimals: 0
+    update_interval: ${refresh_interval}
+    lambda: |-
+      const float raw = id(supply_raw).state;
+      if (isnan(raw)) return NAN;
+      const int codes[] = {0, 2, 3, 5, 8, 9, 10, 11, 12, 13, 14};
+      for (int i = 0; i <= 10; i++) {
+        if (raw == codes[i]) return i;
+      }
+      return NAN;
+  - platform: template
+    # Ступень скорости вытяжного вентилятора, 0–10, вычисленная из регистра 11; не измеренные обороты.
+    name: "Exhaust fan speed"
+    icon: mdi:fan-chevron-up
+    device_id: device_vent
+    accuracy_decimals: 0
+    update_interval: ${refresh_interval}
+    lambda: |-
+      const float raw = id(exhaust_raw).state;
+      if (isnan(raw)) return NAN;
+      const int codes[] = {0, 2, 3, 5, 8, 9, 10, 11, 12, 13, 14};
+      for (int i = 0; i <= 10; i++) {
+        if (raw == codes[i]) return i;
+      }
+      return NAN;
+
+  - platform: modbus_controller
+    modbus_controller_id: royalclima_controller
+    id: external_signal_raw
+    # Регистр 16 (R): внешний сигнал форсирования, 0 — неактивен, 1 — активен. Отключён по умолчанию.
+    name: "External boost signal raw"
+    disabled_by_default: true
+    address: 16
+    register_type: holding
+    value_type: U_WORD
+    accuracy_decimals: 0
+    device_id: device_vent
+    entity_category: diagnostic
+    filters:
+      - timeout: ${stale_timeout}
+  - platform: modbus_controller
+    modbus_controller_id: royalclima_controller
+    id: co2_signal_raw
+    # Регистр 17 (R): сигнал форсирования по CO₂, 0 — неактивен, 1 — активен. Отключён по умолчанию.
+    name: "CO2 boost signal raw"
+    disabled_by_default: true
+    address: 17
+    register_type: holding
+    value_type: U_WORD
+    accuracy_decimals: 0
+    device_id: device_vent
+    entity_category: diagnostic
+    filters:
+      - timeout: ${stale_timeout}
+  - platform: modbus_controller
+    modbus_controller_id: royalclima_controller
+    id: humidity_setpoint
+    # Регистр 19 (RW): заданная относительная влажность, 1–99 %; не текущее измерение.
+    name: "Humidity setpoint"
+    icon: mdi:water-percent
+    address: 19
+    register_type: holding
+    value_type: U_WORD
+    accuracy_decimals: 0
+    device_id: device_vent
+    entity_category: diagnostic
+    filters:
+      - timeout: ${stale_timeout}
+  - platform: modbus_controller
+    modbus_controller_id: royalclima_controller
+    id: filter_interval_code
+    # Регистр 25 (R): код интервала напоминания о фильтре, 0/1/2/3 — 45/60/90/180 дней. Отключён по умолчанию.
+    name: "Filter interval code"
+    disabled_by_default: true
+    address: 25
+    register_type: holding
+    value_type: U_WORD
+    accuracy_decimals: 0
+    device_id: device_vent
+    entity_category: diagnostic
+    filters:
+      - timeout: ${stale_timeout}
+  - platform: modbus_controller
+    modbus_controller_id: royalclima_controller
+    id: heater_setpoint
+    # Регистр 27 (RW): заданная температура включения/выключения нагревателя, 10–25 °C.
+    name: "Heater temperature setpoint"
+    icon: mdi:thermometer
+    address: 27
+    register_type: holding
+    value_type: U_WORD
+    accuracy_decimals: 0
+    device_id: device_vent
+    entity_category: diagnostic
+    filters:
+      - timeout: ${stale_timeout}
+  - platform: template
+    # Настроенный интервал напоминания о фильтре в днях; не оставшееся время до обслуживания.
+    name: "Filter reminder interval"
+    icon: mdi:air-filter
+    device_id: device_vent
+    unit_of_measurement: d
+    accuracy_decimals: 0
+    entity_category: diagnostic
+    update_interval: ${refresh_interval}
+    lambda: |-
+      const float raw = id(filter_interval_code).state;
+      if (isnan(raw) || raw < 0 || raw > 3) return NAN;
+      const int days[] = {45, 60, 90, 180};
+      return days[static_cast<int>(raw)];
+
 binary_sensor:
   - platform: status
+    # Состояние подключения ESP32 к клиенту native API, например Home Assistant.
     name: "ESP32 connection"
     entity_category: diagnostic
 
   - platform: template
+    # Наличие связи с рекуператором по Modbus; оперативный статус обмена.
     name: "Vent system Online"
     device_id: device_vent
     device_class: connectivity
-    lambda: !lambda |-
+    lambda: |-
+      static uint32_t last_check = 0;
+      const uint32_t now = millis();
+      if (uint32_t(now - last_check) < 3000) return {};
+      last_check = now;
       return (id(global_vent_online));
     entity_category: "diagnostic"   
+
+  - platform: template
+    id: ventilation_power
+    # Установка включена/выключена по регистру 9; не подтверждение вращения вентиляторов.
+    name: "Ventilation power"
+    icon: mdi:power
+    device_class: running
+    device_id: device_vent
+    lambda: |-
+      static uint32_t last_check = 0;
+      const uint32_t now = millis();
+      if (uint32_t(now - last_check) < 3000) return {};
+      last_check = now;
+      const float raw = id(power_raw).state;
+      if (isnan(raw)) {
+        id(ventilation_power).invalidate_state();
+        return {};
+      }
+      return raw != 0;
+  - platform: template
+    id: bypass_open
+    # Положение байпаса по битам 1 и 2 регистра 18: открыт/закрыт; обе одинаковые отметки — неизвестно.
+    name: "Bypass open"
+    icon: mdi:valve
+    device_class: opening
+    device_id: device_vent
+    lambda: |-
+      static uint32_t last_check = 0;
+      const uint32_t now = millis();
+      if (uint32_t(now - last_check) < 3000) return {};
+      last_check = now;
+      const float raw = id(status_raw).state;
+      if (isnan(raw)) {
+        id(bypass_open).invalidate_state();
+        return {};
+      }
+      const uint16_t position = static_cast<uint16_t>(raw) & 0x06;
+      if (position == 0x02) return true;
+      if (position == 0x04) return false;
+      id(bypass_open).invalidate_state();
+      return {};
+  - platform: template
+    id: bypass_closed
+    # Признак закрытия байпаса по биту 2 регистра 18. Вспомогательный сенсор, отключён по умолчанию.
+    name: "Bypass closed"
+    disabled_by_default: true
+    entity_category: diagnostic
+    icon: mdi:valve-closed
+    device_id: device_vent
+    lambda: |-
+      static uint32_t last_check = 0;
+      const uint32_t now = millis();
+      if (uint32_t(now - last_check) < 3000) return {};
+      last_check = now;
+      const float raw = id(status_raw).state;
+      if (isnan(raw)) {
+        id(bypass_closed).invalidate_state();
+        return {};
+      }
+      return (static_cast<uint16_t>(raw) & (1U << 2)) != 0;
+  - platform: template
+    id: defrost_active
+    # Активна разморозка по биту 3 регистра 18.
+    name: "Defrost active"
+    icon: mdi:snowflake-melt
+    device_class: running
+    device_id: device_vent
+    lambda: |-
+      static uint32_t last_check = 0;
+      const uint32_t now = millis();
+      if (uint32_t(now - last_check) < 3000) return {};
+      last_check = now;
+      const float raw = id(status_raw).state;
+      if (isnan(raw)) {
+        id(defrost_active).invalidate_state();
+        return {};
+      }
+      return (static_cast<uint16_t>(raw) & (1U << 3)) != 0;
+  - platform: template
+    id: fire_alarm
+    # Активен пожарный вход по биту 0 регистра 18; это сигнал установки, не отдельное измерение дыма.
+    name: "Fire alarm"
+    device_class: smoke
+    device_id: device_vent
+    lambda: |-
+      static uint32_t last_check = 0;
+      const uint32_t now = millis();
+      if (uint32_t(now - last_check) < 3000) return {};
+      last_check = now;
+      const float raw = id(status_raw).state;
+      if (isnan(raw)) {
+        id(fire_alarm).invalidate_state();
+        return {};
+      }
+      return (static_cast<uint16_t>(raw) & (1U << 0)) != 0;
+  - platform: template
+    id: ventilation_error
+    # Есть ошибка: ненулевая маска регистра 20; выключен — ошибок нет.
+    name: "Ventilation error"
+    device_class: problem
+    entity_category: diagnostic
+    device_id: device_vent
+    lambda: |-
+      static uint32_t last_check = 0;
+      const uint32_t now = millis();
+      if (uint32_t(now - last_check) < 3000) return {};
+      last_check = now;
+      const float raw = id(error_raw).state;
+      if (isnan(raw)) {
+        id(ventilation_error).invalidate_state();
+        return {};
+      }
+      return raw != 0;
+  - platform: template
+    id: external_boost_active
+    # Активно внешнее форсирование высокой скорости по регистру 16.
+    name: "External boost active"
+    icon: mdi:fan-plus
+    device_class: running
+    device_id: device_vent
+    lambda: |-
+      static uint32_t last_check = 0;
+      const uint32_t now = millis();
+      if (uint32_t(now - last_check) < 3000) return {};
+      last_check = now;
+      const float raw = id(external_signal_raw).state;
+      if (isnan(raw)) {
+        id(external_boost_active).invalidate_state();
+        return {};
+      }
+      return raw == 1;
+  - platform: template
+    id: co2_boost_active
+    # Активно форсирование по CO₂ по регистру 17; не концентрация CO₂.
+    name: "CO2 boost active"
+    icon: mdi:molecule-co2
+    device_class: running
+    device_id: device_vent
+    lambda: |-
+      static uint32_t last_check = 0;
+      const uint32_t now = millis();
+      if (uint32_t(now - last_check) < 3000) return {};
+      last_check = now;
+      const float raw = id(co2_signal_raw).state;
+      if (isnan(raw)) {
+        id(co2_boost_active).invalidate_state();
+        return {};
+      }
+      return raw == 1;
+
+text_sensor:
+  - platform: template
+    # Русское описание работы установки, положения байпаса, разморозки и пожарного сигнала.
+    name: "Ventilation status"
+    icon: mdi:air-filter
+    device_id: device_vent
+    update_interval: 3s
+    lambda: |-
+      const float raw = id(status_raw).state;
+      if (isnan(raw)) return {"Нет актуальных данных"};
+      const uint16_t flags = static_cast<uint16_t>(raw);
+      std::string result;
+      if (!isnan(id(power_raw).state)) {
+        result = id(power_raw).state == 0 ? "Выключен" : "Работает";
+      } else {
+        result = "Питание: нет актуальных данных";
+      }
+      if (flags & 0x01) result += "; Пожарный сигнал";
+      if (flags & 0x02) result += "; Байпас открыт";
+      if (flags & 0x04) result += "; Байпас закрыт";
+      if (flags & 0x08) result += "; Разморозка";
+      if (flags & 0xFFF0) {
+        result += "; Неизвестные флаги: " + std::to_string(flags & 0xFFF0);
+      }
+      return result;
+
+  - platform: template
+    # Русская расшифровка битов ошибок регистра 20 с исходным числовым кодом.
+    name: "Error description"
+    icon: mdi:alert-octagon-outline
+    device_id: device_vent
+    entity_category: diagnostic
+    update_interval: 3s
+    # Bit map from docs/Modbus protocol - DC (Primo).pdf.
+    lambda: |-
+      const float raw = id(error_raw).state;
+      if (isnan(raw)) return {"Нет актуальных данных"};
+      const uint16_t code = static_cast<uint16_t>(raw);
+      if (code == 0) return {"Ошибок нет"};
+      std::string result = "Ошибка: ";
+      const char *messages[] = {
+        "Датчик наружной температуры OA",
+        "Память EEPROM",
+        "Датчик комнатной температуры RA",
+        "Датчик вытяжной температуры EA",
+        "Нет данных",
+        "Датчик приточной температуры SA",
+        "Приточный вентилятор",
+        "Вытяжной вентилятор"
+      };
+      bool first = true;
+      for (int bit = 0; bit < 8; bit++) {
+        if ((code & (1U << bit)) && messages[bit] != nullptr) {
+          if (!first) result += "; ";
+          result += messages[bit];
+          first = false;
+        }
+      }
+      if (code & 0xFF10) {
+        if (!first) result += "; ";
+        result += "Неизвестные биты";
+      }
+      result += " (код " + std::to_string(code) + ")";
+      return result;
+button:
+  - platform: restart
+    # Удалённая перезагрузка ESP32 с ESPHome; плата рекуператора не перезапускается.
+    name: "ESP32 Reboot"
+    id: esp32_reboot
+    icon: mdi:restart
+    entity_category: diagnostic
