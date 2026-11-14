@@ -387,6 +387,9 @@ elements:
             entity: binary_sensor.ventilation_system_ventilation_error
             state: "on"
           - condition: state
+            entity: binary_sensor.royal_clima_filter_replacement_recommended
+            state: "on"
+          - condition: state
             entity: binary_sensor.ventilation_system_defrost_active
             state: "on"
           - condition: state
@@ -445,6 +448,19 @@ elements:
               name: Ошибка установки
               icon: mdi:alert-circle-outline
               icon_color: red
+              content_info: none
+              tap_action:
+                action: more-info
+          - type: conditional
+            conditions:
+              - entity: binary_sensor.royal_clima_filter_replacement_recommended
+                state: "on"
+            chip:
+              type: entity
+              entity: binary_sensor.royal_clima_filter_replacement_recommended
+              name: Рекомендуется замена фильтра
+              icon: mdi:air-filter
+              icon_color: amber
               content_info: none
               tap_action:
                 action: more-info

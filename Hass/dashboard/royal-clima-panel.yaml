@@ -350,7 +350,7 @@ elements:
         title: "Разморозка"
         state_color: true
         style:
-          left: 34.42857%
+          left: 32.69841%
           top: 68.49057%
           "--mdc-icon-size": 16.269px
         tap_action:
@@ -361,7 +361,7 @@ elements:
         title: "Внешнее форсирование"
         state_color: true
         style:
-          left: 44.80952%
+          left: 41.34921%
           top: 68.49057%
           "--mdc-icon-size": 16.269px
         tap_action:
@@ -372,9 +372,20 @@ elements:
         title: "Форсирование по CO₂ · не измерение ppm"
         state_color: true
         style:
-          left: 55.19048%
+          left: 50%
           top: 68.49057%
           "--mdc-icon-size": 19.5px
+        tap_action:
+          action: more-info
+      - type: state-icon
+        entity: binary_sensor.royal_clima_filter_replacement_recommended
+        icon: mdi:air-filter
+        title: "Фильтр · рекомендуется замена по расчётному интервалу"
+        state_color: true
+        style:
+          left: 58.65079%
+          top: 68.49057%
+          "--mdc-icon-size": 16.269px
         tap_action:
           action: more-info
       - type: state-icon
@@ -383,7 +394,7 @@ elements:
         title: "Ошибка установки"
         state_color: true
         style:
-          left: 65.57143%
+          left: 67.30159%
           top: 68.49057%
           "--mdc-icon-size": 16.269px
         tap_action:
@@ -431,7 +442,7 @@ elements:
         style:
           color: "#899085"
           opacity: 0.45
-          left: 34.42857%
+          left: 32.69841%
           top: 68.49057%
           "--mdc-icon-size": 16.269px
         tap_action:
@@ -443,7 +454,7 @@ elements:
         style:
           color: "#899085"
           opacity: 0.45
-          left: 44.80952%
+          left: 41.34921%
           top: 68.49057%
           "--mdc-icon-size": 16.269px
         tap_action:
@@ -455,9 +466,21 @@ elements:
         style:
           color: "#899085"
           opacity: 0.45
-          left: 55.19048%
+          left: 50%
           top: 68.49057%
           "--mdc-icon-size": 19.5px
+        tap_action:
+          action: more-info
+      - type: icon
+        entity: binary_sensor.royal_clima_filter_replacement_recommended
+        icon: mdi:air-filter
+        title: "Фильтр · рекомендуется замена по расчётному интервалу"
+        style:
+          color: "#899085"
+          opacity: 0.45
+          left: 58.65079%
+          top: 68.49057%
+          "--mdc-icon-size": 16.269px
         tap_action:
           action: more-info
       - type: icon
@@ -467,7 +490,7 @@ elements:
         style:
           color: "#899085"
           opacity: 0.45
-          left: 65.57143%
+          left: 67.30159%
           top: 68.49057%
           "--mdc-icon-size": 16.269px
         tap_action:

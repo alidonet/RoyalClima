@@ -33,7 +33,7 @@ esphome:
   comment: "Modbus monitoring and control for Royal Clima RCS-650-P"
   project:
     name: alidonet.royalclima
-    version: 0.3.261113
+    version: 0.4.261114
   devices:
     - id: device_vent
       name: "Ventilation System"
@@ -456,6 +456,54 @@ sensor:
       if (isnan(raw) || raw < 0 || raw > 3) return NAN;
       const int days[] = {45, 60, 90, 180};
       return days[static_cast<int>(raw)];
+
+  - platform: modbus_controller
+    modbus_controller_id: royalclima_controller
+    id: fan_runtime
+    # Регистр 769 (R): наработка вентилятора, единица регистра — 0,1 часа.
+    name: "Fan runtime"
+    icon: mdi:timer-outline
+    address: 769
+    register_type: holding
+    value_type: U_WORD
+    unit_of_measurement: h
+    accuracy_decimals: 1
+    device_id: device_vent
+    filters:
+      - multiply: 0.1
+      - timeout: ${stale_timeout}
+
+number:
+  - platform: modbus_controller
+    modbus_controller_id: royalclima_controller
+    # Регистр 19 (RW): уставка влажности 1–99 %, если используется датчик влажности.
+    name: "Humidity setpoint control"
+    device_id: device_vent
+    icon: mdi:water-percent
+    entity_category: config
+    disabled_by_default: true
+    address: 19
+    register_type: holding
+    value_type: U_WORD
+    min_value: 1
+    max_value: 99
+    step: 1
+    use_write_multiple: false
+  - platform: modbus_controller
+    modbus_controller_id: royalclima_controller
+    # Регистр 27 (RW): уставка нагревателя 10–25 °C; назначение выхода проверить на установке.
+    name: "Heater temperature setpoint control"
+    device_id: device_vent
+    icon: mdi:thermometer
+    entity_category: config
+    disabled_by_default: true
+    address: 27
+    register_type: holding
+    value_type: U_WORD
+    min_value: 10
+    max_value: 25
+    step: 1
+    use_write_multiple: false
 
 binary_sensor:
   - platform: status

@@ -136,6 +136,22 @@ sections:
                 state: "on"
               - entity: binary_sensor.ventilation_system_vent_system_online
                 state: "on"
+              - entity: binary_sensor.royal_clima_filter_replacement_recommended
+                state: "on"
+            card:
+              type: markdown
+              content: |
+                **⚠️ Рекомендуется проверить и обслужить фильтр.**
+
+                Расчётный интервал по наработке достигнут. Это не измерение загрязнения.
+                После обслуживания проверьте, сбрасывается ли счётчик наработки установки.
+
+          - type: conditional
+            conditions:
+              - entity: binary_sensor.royal_clima_esp32_connection
+                state: "on"
+              - entity: binary_sensor.ventilation_system_vent_system_online
+                state: "on"
             card:
               type: entities
               title: Управление
@@ -249,6 +265,28 @@ sections:
                   name: Внешнее форсирование
                 - entity: binary_sensor.ventilation_system_co2_boost_active
                   name: Форсирование по CO₂
+          - type: conditional
+            conditions:
+              - entity: binary_sensor.royal_clima_esp32_connection
+                state: "on"
+              - entity: binary_sensor.ventilation_system_vent_system_online
+                state: "on"
+            card:
+              type: entities
+              title: Фильтр
+              show_header_toggle: false
+              state_color: true
+              entities:
+                - type: section
+                  label: Оценка по наработке, не загрязнение
+                - entity: sensor.royal_clima_filter_usage
+                  name: Использовано интервала
+                - entity: binary_sensor.royal_clima_filter_replacement_recommended
+                  name: Рекомендация замены
+                - entity: sensor.ventilation_system_fan_runtime
+                  name: Наработка вентилятора
+                - entity: sensor.ventilation_system_filter_reminder_interval
+                  name: Интервал напоминания
           - type: entities
             show_header_toggle: false
             entities:
@@ -277,5 +315,3 @@ sections:
                     name: Уставка влажности (не измерение)
                   - entity: sensor.ventilation_system_heater_temperature_setpoint
                     name: Уставка нагревателя · °C
-                  - entity: sensor.ventilation_system_filter_reminder_interval
-                    name: Интервал фильтра (не остаток)

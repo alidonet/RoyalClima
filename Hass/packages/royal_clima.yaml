@@ -81,3 +81,28 @@ royal_clima:
                 entity_id: select.ventilation_system_exhaust_speed_control
               data:
                 option: "{{ option }}"
+    - sensor:
+        # Оценка по общему счётчику 769 и периоду из 25; после сброса фильтра проверить, обнуляется ли 769.
+        - name: "Royal Clima filter usage"
+          unique_id: royal_clima_filter_usage
+          default_entity_id: sensor.royal_clima_filter_usage
+          icon: mdi:air-filter
+          unit_of_measurement: "%"
+          state_class: measurement
+          availability: >-
+            {{ has_value('sensor.ventilation_system_fan_runtime')
+               and has_value('sensor.ventilation_system_filter_reminder_interval')
+               and states('sensor.ventilation_system_filter_reminder_interval') | float(0) > 0 }}
+          state: >-
+            {% set interval = states('sensor.ventilation_system_filter_reminder_interval') | float(0) %}
+            {{ ((states('sensor.ventilation_system_fan_runtime') | float(0)) / (interval * 24) * 100) | round(1)
+               if interval > 0 else none }}
+    - binary_sensor:
+        # Рекомендация при достижении 100 % расчётного интервала; не измеряет загрязнение фильтра.
+        - name: "Royal Clima filter replacement recommended"
+          unique_id: royal_clima_filter_replacement_recommended
+          default_entity_id: binary_sensor.royal_clima_filter_replacement_recommended
+          device_class: problem
+          icon: mdi:air-filter
+          availability: "{{ has_value('sensor.royal_clima_filter_usage') }}"
+          state: "{{ states('sensor.royal_clima_filter_usage') | float(0) >= 100 }}"
