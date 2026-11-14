@@ -1,5 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="420" height="530" viewBox="20 15 420 530">
   <defs>
+    <path id="lcd-dash" d="M-7 0 -5.4-1.7H5.4L7 0 5.4 1.7H-5.4Z"/>
+    <g id="lcd-no-data"><use href="#lcd-dash" x="-9"/><use href="#lcd-dash" x="9"/></g>
     <linearGradient id="body" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop stop-color="#f5f7f8"/>
       <stop offset="0.5" stop-color="#eaf0f3"/>
@@ -68,11 +70,11 @@
     <text x="317.4" y="287">СКОРОСТЬ ВЫТЯЖКИ</text>
   </g>
   <path d="M52 167H408 M52 259H408 M52 351H408 M230 75V351" fill="none" stroke="#b5baae" stroke-width="0.7"/>
-  <!-- Эти прочерки видны, когда HA скрывает подписи неизвестных значений. -->
-  <g fill="#30372a" font-family="monospace" font-size="24" text-anchor="middle" dominant-baseline="central">
-    <text x="142.6" y="137">--</text><text x="317.4" y="137">--</text>
-    <text x="142.6" y="229">--</text><text x="317.4" y="229">--</text>
-    <text x="142.6" y="321">--</text><text x="317.4" y="321">--</text>
+  <!-- Средние сегменты LCD: видны без данных и не зависят от загрузки шрифта. -->
+  <g fill="#515550">
+    <use href="#lcd-no-data" x="142.6" y="134"/><use href="#lcd-no-data" x="317.4" y="134"/>
+    <use href="#lcd-no-data" x="142.6" y="226"/><use href="#lcd-no-data" x="317.4" y="226"/>
+    <use href="#lcd-no-data" x="142.6" y="318"/><use href="#lcd-no-data" x="317.4" y="318"/>
   </g>
   <g transform="translate(0 10)">
   <g fill="url(#button-well)" stroke="#cbd6db" stroke-width="0.4" filter="url(#button-well-inset)">

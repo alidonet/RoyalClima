@@ -1,6 +1,5 @@
 <p align="center">
   <img src="images/royalclima.png" style="max-width: 100%; height: auto; display: block;" alt="Royal Clima">
-#+#
   <img src="images/esp32.jpg" style="max-width: 50%; height: auto; display: block;" alt="ESP32">
   <img src="images/ha.png" style="max-width: 50%; height: auto; display: block;" alt="Home Assistant">
 </p>
@@ -16,7 +15,7 @@ ESP32 позволяет получать показания и управлят
 - Скомпилированные прошивки для ESP32: [firmware для первоначальной установки](bin/royalclima-firmware.factory.bin) и [OTA для обновления](bin/royalclima-firmware.ota.bin).
 - [Конфигурацию для ESPHome](ESPHome/RoyalClima.yaml).
 - [Документацию](docs/): [руководство SOFFIO Primo](docs/2020_RC_Manual_Soffio-Primo.pdf) и [протокол Modbus DC (Primo)](docs/Modbus%20protocol%20-%20DC%20%28Primo%29.pdf).
-- Файлы для использования в Hass: [пакет шаблонов и управления](Hass/packages/royal_clima.yaml), [примеры дашбордов и карточек](Hass/dashboard/) и [SVG для карточек](Hass/images/).
+- Файлы для использования в Hass: [пакет шаблонов и управления](Hass/packages/royal_clima.yaml), [примеры дашбордов и карточек](Hass/dashboard/), [SVG для карточек](Hass/images/) и [шрифты](Hass/fonts/).
 
 <p align="center">
   <img src="images/soffio.jpg" style="max-width: 100%; height: auto; display: block;" alt="ПВУ">
@@ -285,26 +284,31 @@ api:
 | [royal-clima-vent-tab.yaml](Hass/dashboard/royal-clima-vent-tab.yaml) | Полная вкладка «ПВУ» с управлением, графиками и диагностикой | [Mushroom](https://github.com/piitaya/lovelace-mushroom), [stack-in-card](https://github.com/custom-cards/stack-in-card), [fold-entity-row](https://github.com/thomasloven/lovelace-fold-entity-row) |
 
 **Пульт управления**
+
 ![Пример пульта управления](images/control_work.png)
 
 **Схема потоков — установка работает**
+
 ![Схема потоков при включённой установке](images/flow_work.png)
 
 **Схема потоков — установка выключена**
+
 ![Схема потоков при выключенной установке](images/flow_off.png)
 
 **Схема потоков — нет связи**
+
 ![Схема потоков при отсутствии связи](images/flow_unavail.png)
 
 Для установки отдельных карточек:
 
 1. Подключите пакет [royal_clima.yaml](Hass/packages/royal_clima.yaml), как описано выше, и установите необходимые дополнительные ресурсы.
-2. Скопируйте **все шесть SVG** из [Hass/images](Hass/images/) в каталог **`/config/www/images/`** Home Assistant, сохранив имена файлов. Если каталогов `www` или `images` нет, создайте их. Копировать корневой каталог `images` репозитория не нужно — он содержит иллюстрации для README.
+2. Скопируйте **все SVG** из [Hass/images](Hass/images/) в каталог **`/config/www/images/`** Home Assistant, сохранив имена файлов. Если каталогов `www` или `images` нет, создайте их. Копировать корневой каталог `images` репозитория не нужно — он содержит иллюстрации для README.
 3. В YAML уже указаны адреса `/local/images/имя-файла.svg`: например, `/config/www/images/royal-clima-panel.svg` доступен как `/local/images/royal-clima-panel.svg`. Если `www` создан впервые, перезапустите Home Assistant. См. [размещение локальных файлов в HA](https://www.home-assistant.io/integrations/http/#hosting-files).
-4. Откройте нужный дашборд → режим редактирования → «Добавить карточку» → «Вручную». Вставьте целиком YAML пульта или схемы потоков, проверьте `entity_id` и сохраните. Каждую карточку можно добавить на нужную вкладку отдельно.
-5. Для полной вкладки `royal-clima-vent-tab.yaml` используйте YAML-редактор **вкладки**, а не редактор одной карточки. Подробности — ниже. После замены SVG обновите страницу; если отображается прежняя версия, очистите кеш браузера.
+4. Для пульта скопируйте содержимое [Hass/fonts](Hass/fonts/) в `/config/www/fonts/`. В ресурсах дашборда добавьте `/local/fonts/royal-clima-lcd.css?v=1` с типом **CSS (таблица стилей)**. Без этого ресурса используется запасной шрифт `monospace`.
+5. Откройте нужный дашборд → режим редактирования → «Добавить карточку» → «Вручную». Вставьте целиком YAML пульта или схемы потоков, проверьте `entity_id` и сохраните. Каждую карточку можно добавить на нужную вкладку отдельно.
+6. Для полной вкладки `royal-clima-vent-tab.yaml` используйте YAML-редактор **вкладки**, а не редактор одной карточки. Подробности — ниже. После замены SVG, шрифтов или CSS обновите страницу; если отображается прежняя версия, очистите кеш браузера.
 
-Карточки используют штатный тип `picture-elements`. Вращение вентиляторов означает включённую установку и ненулевую ступень, а стрелки — направления потоков.
+Карточки используют штатный тип `picture-elements`. Анимация вентиляторов означает включённую установку и ненулевую ступень, а стрелки — направления потоков.
 
 ### Пример дашборда
 

@@ -1,0 +1,14 @@
+/* DSEG7 Classic Regular v0.46, keshikan; see DSEG-LICENSE.txt.
+ * Source: https://github.com/keshikan/DSEG/releases/tag/v0.46
+ * Copy this folder to /config/www/fonts/.
+ * Add /local/fonts/royal-clima-lcd.css?v=1 as a dashboard resource, type: css.
+ * Digits, minus and decimal point only; units and words use the fallback font.
+ */
+@font-face {
+  font-family: "RoyalClimaLCD";
+  src: url("./DSEG7Classic-Regular.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  unicode-range: U+002D-002E, U+0030-0039;
+}

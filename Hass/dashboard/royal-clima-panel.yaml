@@ -1,6 +1,9 @@
 # Отдельная карточка: добавить как ручную карточку в секцию дашборда.
-# Скопируйте royal-clima-panel.svg и royal-clima-fan.svg в /config/www/images/.
+# Скопируйте royal-clima-panel.svg, royal-clima-panel-fan.svg и royal-clima-panel-fan-off.svg в /config/www/images/.
 # Управление использует обёртки из royal_clima.yaml.
+# Скопируйте содержимое Hass/fonts/ в /config/www/fonts/.
+# Ресурсы дашборда: /local/fonts/royal-clima-lcd.css?v=1, тип CSS (таблица стилей).
+# Без ресурса показания автоматически используют запасной monospace.
 # Неизвестные значения: подпись скрывается, видны прочерки на SVG-фоне.
 # Фон подписи совпадает с экраном SVG и перекрывает прочерки при наличии данных.
 # Корпус без вложенного контура; карточка занимает 85% ширины. Нужен card-mod.
@@ -39,7 +42,10 @@ elements:
           left: 29.19048%
           top: 23.01887%
           color: "#30372a"
-          font-family: monospace
+          font-family: "RoyalClimaLCD, monospace"
+          font-weight: 400
+          font-style: normal
+          line-height: 1.25
           font-size: 25.5px
           word-spacing: -0.3em
         tap_action:
@@ -62,7 +68,10 @@ elements:
           left: 70.80952%
           top: 23.01887%
           color: "#30372a"
-          font-family: monospace
+          font-family: "RoyalClimaLCD, monospace"
+          font-weight: 400
+          font-style: normal
+          line-height: 1.25
           font-size: 25.5px
           word-spacing: -0.3em
         tap_action:
@@ -84,7 +93,10 @@ elements:
           left: 29.19048%
           top: 40.37736%
           color: "#30372a"
-          font-family: monospace
+          font-family: "RoyalClimaLCD, monospace"
+          font-weight: 400
+          font-style: normal
+          line-height: 1.25
           font-size: 25.5px
           word-spacing: -0.3em
   - type: conditional
@@ -104,7 +116,10 @@ elements:
           left: 70.80952%
           top: 40.37736%
           color: "#30372a"
-          font-family: monospace
+          font-family: "RoyalClimaLCD, monospace"
+          font-weight: 400
+          font-style: normal
+          line-height: 1.25
           font-size: 25.5px
           word-spacing: -0.3em
   - type: conditional
@@ -113,42 +128,62 @@ elements:
         state_not: "unknown"
       - entity: select.royal_clima_supply_speed
         state_not: "unavailable"
+      - entity: sensor.ventilation_system_supply_fan_speed
+        state_not: "unknown"
+      - entity: sensor.ventilation_system_supply_fan_speed
+        state_not: "unavailable"
     elements:
       - type: state-label
-        entity: select.royal_clima_supply_speed
+        entity: sensor.ventilation_system_supply_fan_speed
         style:
           background-color: "#eef0e9"
           padding: 0 5.916px
           min-width: 2ch
-          text-align: center
-          left: 29.19048%
+          text-align: left
+          width: 2ch
+          transform: translate(0, -50%)
+          left: 25%
           top: 57.73585%
           color: "#30372a"
-          font-family: monospace
+          font-family: "RoyalClimaLCD, monospace"
+          font-weight: 400
+          font-style: normal
+          line-height: 1.25
           font-size: 25.5px
         tap_action:
           action: more-info
+          entity: select.royal_clima_supply_speed
   - type: conditional
     conditions:
       - entity: select.royal_clima_exhaust_speed
         state_not: "unknown"
       - entity: select.royal_clima_exhaust_speed
         state_not: "unavailable"
+      - entity: sensor.ventilation_system_exhaust_fan_speed
+        state_not: "unknown"
+      - entity: sensor.ventilation_system_exhaust_fan_speed
+        state_not: "unavailable"
     elements:
       - type: state-label
-        entity: select.royal_clima_exhaust_speed
+        entity: sensor.ventilation_system_exhaust_fan_speed
         style:
           background-color: "#eef0e9"
           padding: 0 5.916px
           min-width: 2ch
-          text-align: center
-          left: 70.80952%
+          text-align: left
+          width: 2ch
+          transform: translate(0, -50%)
+          left: 66.61905%
           top: 57.73585%
           color: "#30372a"
-          font-family: monospace
+          font-family: "RoyalClimaLCD, monospace"
+          font-weight: 400
+          font-style: normal
+          line-height: 1.25
           font-size: 25.5px
         tap_action:
           action: more-info
+          entity: select.royal_clima_exhaust_speed
   - type: state-icon
     entity: switch.royal_clima_power
     icon: mdi:power
@@ -156,7 +191,7 @@ elements:
     style:
       left: 19.99048%
       top: 83.58491%
-      "--mdc-icon-size": 22.185px
+      "--mdc-icon-size": 25px
       color: "#505850"
     tap_action:
       action: toggle
@@ -167,7 +202,7 @@ elements:
     style:
       left: 50%
       top: 83.58491%
-      "--mdc-icon-size": 22.185px
+      "--mdc-icon-size": 25px
       color: "#505850"
     tap_action:
       action: more-info
@@ -178,24 +213,40 @@ elements:
     style:
       left: 80.00952%
       top: 83.58491%
-      "--mdc-icon-size": 22.185px
+      "--mdc-icon-size": 25px
       color: "#505850"
     tap_action:
       action: more-info
 
-  # Индикаторы вентиляторов: вращение означает включение и ненулевую ступень, не RPM.
-  - type: state-icon
-    entity: select.royal_clima_supply_speed
-    icon: mdi:fan
-    title: Скорость притока
-    state_color: false
-    style:
-      left: 22.52381%
-      top: 57.73585%
-      color: "#a4aa9d"
-      "--mdc-icon-size": 20.706px
-    tap_action:
-      action: more-info
+  # Индикаторы вентиляторов: анимация означает включение и ненулевую ступень, не RPM.
+  - type: conditional
+    conditions:
+      - condition: or
+        conditions:
+          - condition: state
+            entity: binary_sensor.royal_clima_esp32_connection
+            state_not: "on"
+          - condition: state
+            entity: binary_sensor.ventilation_system_vent_system_online
+            state_not: "on"
+          - condition: state
+            entity: binary_sensor.ventilation_system_ventilation_power
+            state_not: "on"
+          - condition: state
+            entity: select.royal_clima_supply_speed
+            state: ["Стоп", "unknown", "unavailable"]
+    elements:
+      - type: image
+        entity: select.royal_clima_supply_speed
+        image: /local/images/royal-clima-panel-fan-off.svg
+        title: Скорость притока
+        style:
+          left: 21.96359%
+          top: 57.07547%
+          opacity: 0.3
+          width: 23.664px
+        tap_action:
+          action: more-info
   - type: conditional
     conditions:
       - entity: binary_sensor.royal_clima_esp32_connection
@@ -213,26 +264,42 @@ elements:
     elements:
       - type: image
         entity: select.royal_clima_supply_speed
-        image: /local/images/royal-clima-fan.svg
+        image: /local/images/royal-clima-panel-fan.svg
         title: Вентилятор притока · включён, ступень больше нуля
         style:
-          left: 22.52381%
-          top: 57.73585%
+          left: 21.96359%
+          top: 57.07547%
           width: 23.664px
         tap_action:
           action: more-info
-  - type: state-icon
-    entity: select.royal_clima_exhaust_speed
-    icon: mdi:fan
-    title: Скорость вытяжки
-    state_color: false
-    style:
-      left: 64.14286%
-      top: 57.73585%
-      color: "#a4aa9d"
-      "--mdc-icon-size": 20.706px
-    tap_action:
-      action: more-info
+  - type: conditional
+    conditions:
+      - condition: or
+        conditions:
+          - condition: state
+            entity: binary_sensor.royal_clima_esp32_connection
+            state_not: "on"
+          - condition: state
+            entity: binary_sensor.ventilation_system_vent_system_online
+            state_not: "on"
+          - condition: state
+            entity: binary_sensor.ventilation_system_ventilation_power
+            state_not: "on"
+          - condition: state
+            entity: select.royal_clima_exhaust_speed
+            state: ["Стоп", "unknown", "unavailable"]
+    elements:
+      - type: image
+        entity: select.royal_clima_exhaust_speed
+        image: /local/images/royal-clima-panel-fan-off.svg
+        title: Скорость вытяжки
+        style:
+          left: 63.58264%
+          top: 57.07547%
+          opacity: 0.3
+          width: 23.664px
+        tap_action:
+          action: more-info
   - type: conditional
     conditions:
       - entity: binary_sensor.royal_clima_esp32_connection
@@ -250,11 +317,11 @@ elements:
     elements:
       - type: image
         entity: select.royal_clima_exhaust_speed
-        image: /local/images/royal-clima-fan.svg
+        image: /local/images/royal-clima-panel-fan.svg
         title: Вентилятор вытяжки · включён, ступень больше нуля
         style:
-          left: 64.14286%
-          top: 57.73585%
+          left: 63.58264%
+          top: 57.07547%
           width: 23.664px
         tap_action:
           action: more-info
@@ -272,9 +339,9 @@ elements:
         title: "Байпас · подсветка: открыт"
         state_color: true
         style:
-          left: 14.95238%
+          left: 24.04762%
           top: 68.49057%
-          "--mdc-icon-size": 16.269px
+          "--mdc-icon-size": 14.5px
         tap_action:
           action: more-info
       - type: state-icon
@@ -283,7 +350,7 @@ elements:
         title: "Разморозка"
         state_color: true
         style:
-          left: 29.19048%
+          left: 34.42857%
           top: 68.49057%
           "--mdc-icon-size": 16.269px
         tap_action:
@@ -294,7 +361,7 @@ elements:
         title: "Внешнее форсирование"
         state_color: true
         style:
-          left: 43.42857%
+          left: 44.80952%
           top: 68.49057%
           "--mdc-icon-size": 16.269px
         tap_action:
@@ -305,7 +372,7 @@ elements:
         title: "Форсирование по CO₂ · не измерение ppm"
         state_color: true
         style:
-          left: 57.66667%
+          left: 55.19048%
           top: 68.49057%
           "--mdc-icon-size": 19.5px
         tap_action:
@@ -316,7 +383,7 @@ elements:
         title: "Ошибка установки"
         state_color: true
         style:
-          left: 71.90476%
+          left: 65.57143%
           top: 68.49057%
           "--mdc-icon-size": 16.269px
         tap_action:
@@ -327,7 +394,7 @@ elements:
         title: "Пожарный вход установки"
         state_color: true
         style:
-          left: 86.14286%
+          left: 75.95238%
           top: 68.49057%
           "--mdc-icon-size": 16.269px
         tap_action:
@@ -352,9 +419,9 @@ elements:
         style:
           color: "#899085"
           opacity: 0.45
-          left: 14.95238%
+          left: 24.04762%
           top: 68.49057%
-          "--mdc-icon-size": 16.269px
+          "--mdc-icon-size": 14.5px
         tap_action:
           action: more-info
       - type: icon
@@ -364,7 +431,7 @@ elements:
         style:
           color: "#899085"
           opacity: 0.45
-          left: 29.19048%
+          left: 34.42857%
           top: 68.49057%
           "--mdc-icon-size": 16.269px
         tap_action:
@@ -376,7 +443,7 @@ elements:
         style:
           color: "#899085"
           opacity: 0.45
-          left: 43.42857%
+          left: 44.80952%
           top: 68.49057%
           "--mdc-icon-size": 16.269px
         tap_action:
@@ -388,7 +455,7 @@ elements:
         style:
           color: "#899085"
           opacity: 0.45
-          left: 57.66667%
+          left: 55.19048%
           top: 68.49057%
           "--mdc-icon-size": 19.5px
         tap_action:
@@ -400,7 +467,7 @@ elements:
         style:
           color: "#899085"
           opacity: 0.45
-          left: 71.90476%
+          left: 65.57143%
           top: 68.49057%
           "--mdc-icon-size": 16.269px
         tap_action:
@@ -412,7 +479,7 @@ elements:
         style:
           color: "#899085"
           opacity: 0.45
-          left: 86.14286%
+          left: 75.95238%
           top: 68.49057%
           "--mdc-icon-size": 16.269px
         tap_action:
